@@ -1,11 +1,22 @@
-function ProductCard({ product, onDelete }) {
+function ProductCard({ product, onDelete, onEdit }) {
   return (
     <div className="product-card">
       <img src={product.image} alt={product.name} />
-      <h3>{product.name}</h3>
-      <p>Quantidade: {product.quantity}</p>
 
-      <button onClick={onDelete}>Excluir</button>
+      <h4>{product.name}</h4>
+      <p>Código: {product.code}</p>
+      <p>Tipo: {product.type}</p>
+      <p>Qtd: {product.quantity}</p>
+
+      <div className="card-actions">
+        <button className="edit-btn" onClick={onEdit}>
+          ✏️
+        </button>
+
+        <button className="delete-btn" onClick={onDelete}>
+          🗑️
+        </button>
+      </div>
     </div>
   );
 }

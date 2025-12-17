@@ -1,24 +1,27 @@
-import { ref, push, set, get, remove, update } from "firebase/database";
 import { db } from "./firebase";
+import { ref, push, get, remove, update } from "firebase/database";
 
-// Criar produto
+// ➕ Adicionar produto
 export const addProduct = async (product) => {
-  const productRef = push(ref(db, "products"));
-  await set(productRef, product);
+  const productsRef = ref(db, "products");
+  await push(productsRef, product);
 };
 
-// Buscar produtos
-export const getProducts = async () => {
-  const snapshot = await get(ref(db, "products"));
-  return snapshot.exists() ? snapshot.val() : {};
+// ✏️ Atualizar produto
+export const updateProduct = async (id, product) => {
+  const productRef = ref(db, `products/${id}`);
+  await update(productRef, product);
 };
 
-// Deletar produto
+// ❌ Excluir produto
 export const deleteProduct = async (id) => {
-  await remove(ref(db, `products/${id}`));
+  const productRef = ref(db, `products/${id}`);
+  await remove(productRef);
 };
 
-// Atualizar produto
-export const updateProduct = async (id, data) => {
-  await update(ref(db, `products/${id}`), data);
+// 📦 Buscar produtos
+export const getProducts = async () => {
+  const productsRef = ref(db, "products");
+  const snapshot = await get(productsRef);
+  return snapshot.val();
 };

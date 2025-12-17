@@ -7,7 +7,7 @@ const firebaseConfig = {
   authDomain: "blitoestoque.firebaseapp.com",
   databaseURL: "https://blitoestoque-default-rtdb.firebaseio.com",
   projectId: "blitoestoque",
-  storageBucket: "blitoestoque.firebasestorage.app",
+  storageBucket: "blitoestoque.appspot.com",
   messagingSenderId: "1019975983840",
   appId: "1:1019975983840:web:b5df8d39f6292ecae7e685",
   measurementId: "G-1H2BZ0CQTR"

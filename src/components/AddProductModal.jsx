@@ -1,32 +1,39 @@
 import { useState } from "react";
-import { uploadImage } from "../services/storage";
 
-function AddProductModal({ onClose, onSave }) {
-  const [name, setName] = useState("");
-  const [quantity, setQuantity] = useState("");
-  const [file, setFile] = useState(null);
-  const [preview, setPreview] = useState(null);
+function AddProductModal({ onClose, onSave, editingProduct }) {
+  const [name, setName] = useState(editingProduct?.name || "");
+  const [code, setCode] = useState(editingProduct?.code || "");
+  const [type, setType] = useState(editingProduct?.type || "");
+  const [quantity, setQuantity] = useState(editingProduct?.quantity || "");
+  const [image, setImage] = useState(editingProduct?.image || "");
   const [loading, setLoading] = useState(false);
 
+  // 📸 Converter imagem para BASE64
   const handleImageChange = (e) => {
-    const selectedFile = e.target.files[0];
-    if (!selectedFile) return;
+    const file = e.target.files[0];
+    if (!file) return;
 
-    setFile(selectedFile);
-    setPreview(URL.createObjectURL(selectedFile));
+    const reader = new FileReader();
+    reader.onload = () => {
+      setImage(reader.result);
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleSave = async () => {
-    if (!name || !quantity || !file) return;
+    if (!name || !type || !quantity || !image) {
+      alert("Preencha todos os campos");
+      return;
+    }
 
     setLoading(true);
 
-    const imageUrl = await uploadImage(file);
-
     await onSave({
       name,
+      code,
+      type,
       quantity: Number(quantity),
-      image: imageUrl,
+      image,
     });
 
     setLoading(false);
@@ -37,43 +44,36 @@ function AddProductModal({ onClose, onSave }) {
     <div className="modal-overlay">
       <div className="modal">
 
-        {/* BOTÃO FECHAR */}
-        <button className="modal-close" onClick={onClose}>
-          ×
-        </button>
+        <button className="modal-close" onClick={onClose}>×</button>
 
-        <h3>Adicionar Produto</h3>
+        <h3>{editingProduct ? "Editar Produto" : "Adicionar Produto"}</h3>
 
+        {/* Imagem */}
         <label className="image-input">
-          {preview ? (
-            <img src={preview} alt="Preview" />
-          ) : (
-            <span>Selecionar ou tirar foto</span>
-          )}
-
-          <input
-            type="file"
-            accept="image/*"
-            capture="environment"
-            hidden
-            onChange={handleImageChange}
-          />
+          {image ? <img src={image} alt="Preview" /> : <span>Selecionar imagem</span>}
+          <input type="file" accept="image/*" hidden onChange={handleImageChange} />
         </label>
 
-        <input
-          placeholder="Nome do produto"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
+        <input placeholder="Nome do Produto" value={name} onChange={(e) => setName(e.target.value)} />
+        <input placeholder="Código do Produto (Opcional)" value={code} onChange={(e) => setCode(e.target.value)} />
+
+        <select value={type} onChange={(e) => setType(e.target.value)}>
+          <option value="">Selecione o tipo</option>
+          <option value="Toner">Toner</option>
+          <option value="Cilindro">Cilindro</option>
+          <option value="Fusão">Fusão</option>
+          <option value="Tinta">Tinta</option>
+          <option value="Peças diversas">Peças diversas</option>
+        </select>
 
         <input
           type="number"
-          placeholder="Quantidade em estoque"
+          placeholder="Quantidade"
           value={quantity}
           onChange={(e) => setQuantity(e.target.value)}
         />
 
-        <button className="save" onClick={handleSave} disabled={loading}>
+        <button onClick={handleSave} disabled={loading}>
           {loading ? "Salvando..." : "Salvar"}
         </button>
       </div>

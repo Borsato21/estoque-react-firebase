@@ -1,30 +1,52 @@
 import { useEffect, useState } from "react";
-import { ref, onValue } from "firebase/database";
-import { db } from "../services/firebase";
-import { addProduct, deleteProduct } from "../services/products";
+import {
+  addProduct,
+  deleteProduct,
+  getProducts,
+  updateProduct,
+} from "../services/products";
 import AddProductModal from "../components/AddProductModal";
 import ProductCard from "../components/ProductCard";
 import "../styles/stock.css";
 
 function Stock() {
-  const [products, setProducts] = useState({});
+  const [products, setProducts] = useState([]);
   const [search, setSearch] = useState("");
   const [showModal, setShowModal] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  const loadProducts = async () => {
+    setLoading(true);
+    const data = await getProducts();
+
+    const list = Object.entries(data || {}).map(([id, value]) => ({
+      id,
+      ...value,
+    }));
+
+    setProducts(list);
+    setLoading(false);
+  };
 
   useEffect(() => {
-    const productsRef = ref(db, "products");
-    onValue(productsRef, (snapshot) => {
-      setProducts(snapshot.val() || {});
-    });
+    loadProducts();
   }, []);
 
   const handleSaveProduct = async (product) => {
-    await addProduct(product);
+    if (editingProduct) {
+      await updateProduct(editingProduct.id, product);
+    } else {
+      await addProduct(product);
+    }
+
+    setEditingProduct(null);
+    setShowModal(false);
+    loadProducts();
   };
 
-  const filteredProducts = Object.entries(products).filter(
-    ([, product]) =>
-      product.name.toLowerCase().includes(search.toLowerCase())
+  const filteredProducts = products.filter((product) =>
+    product.name.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
@@ -33,30 +55,47 @@ function Stock() {
 
       <div className="stock-header">
         <input
-          placeholder="Pesquisar pelo nome..."
+          placeholder="Pesquisar..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
 
-        <button onClick={() => setShowModal(true)}>
+        <button
+          onClick={() => {
+            setEditingProduct(null);
+            setShowModal(true);
+          }}
+        >
           Adicionar produto
         </button>
       </div>
 
-      <div className="stock-grid">
-        {filteredProducts.map(([id, product]) => (
-          <ProductCard
-            key={id}
-            product={product}
-            onDelete={() => deleteProduct(id)}
-          />
-        ))}
-      </div>
+      {loading ? (
+        <p>Carregando...</p>
+      ) : (
+        <div className="stock-grid">
+          {filteredProducts.map((product) => (
+            <ProductCard
+              key={product.id}
+              product={product}
+              onDelete={async () => {
+                await deleteProduct(product.id);
+                loadProducts();
+              }}
+              onEdit={() => {
+                setEditingProduct(product);
+                setShowModal(true);
+              }}
+            />
+          ))}
+        </div>
+      )}
 
       {showModal && (
         <AddProductModal
           onClose={() => setShowModal(false)}
           onSave={handleSaveProduct}
+          editingProduct={editingProduct}
         />
       )}
     </div>
@@ -64,4 +103,3 @@ function Stock() {
 }
 
 export default Stock;
-
