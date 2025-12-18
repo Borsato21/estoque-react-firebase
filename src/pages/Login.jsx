@@ -2,6 +2,8 @@ import { useState } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 import { auth } from "../services/firebase";
+import ForgotPasswordModal from "../components/ForgotPasswordModal";
+
 import "../styles/login.css";
 
 function Login() {
@@ -10,6 +12,7 @@ function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [showForgot, setShowForgot] = useState(false);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -24,7 +27,7 @@ function Login() {
   return (
     <div className="login-container">
       <div className="login-card">
-        <h2>Controle de Estoque</h2>
+        <h2>Estoque Blito</h2>
 
         <form onSubmit={handleLogin}>
           <input
@@ -44,11 +47,23 @@ function Login() {
           />
 
           <button type="submit">Entrar</button>
+          <p
+  className="forgot-password"
+  onClick={() => setShowForgot(true)}
+>
+  Esqueceu a senha?
+</p>
+
         </form>
 
         {error && <p className="error-text">{error}</p>}
       </div>
+      {showForgot && (
+  <ForgotPasswordModal onClose={() => setShowForgot(false)} />
+)}
+
     </div>
+    
   );
 }
 

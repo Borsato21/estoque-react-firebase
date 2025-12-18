@@ -242,3 +242,17 @@
   background: #dc2626;
   color: white;
 }
+
+.logout-btn {
+  background: none;
+  border: 2px solid #ff4d4d;
+  color: #ff4d4d;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.logout-btn:hover {
+  background: #ff4d4d;
+  color: white;
+}

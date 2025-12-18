@@ -59,11 +59,11 @@ function AddProductModal({ onClose, onSave, editingProduct }) {
 
         <select value={type} onChange={(e) => setType(e.target.value)}>
           <option value="">Selecione o tipo</option>
-          <option value="Toner">Toner</option>
-          <option value="Cilindro">Cilindro</option>
-          <option value="Fusão">Fusão</option>
-          <option value="Tinta">Tinta</option>
-          <option value="Peças diversas">Peças diversas</option>
+  <option value="toner">Toner</option>
+  <option value="cilindro">Cilindro</option>
+  <option value="tinta">Tinta</option>
+  <option value="fusao">Fusão</option>
+  <option value="pecas diversas">Peças diversas</option>
         </select>
 
         <input

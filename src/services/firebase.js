@@ -1,6 +1,8 @@
 import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
+import { getAuth, signOut } from "firebase/auth";
 import { getDatabase } from "firebase/database";
+import { sendPasswordResetEmail } from "firebase/auth";
+
 
 const firebaseConfig = {
   apiKey: "AIzaSyBN4r8Tqn3bS5EquJfnncfD47wkMlnSxGA",
@@ -14,8 +16,12 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-
 export const auth = getAuth(app);
 export const db = getDatabase(app);
+export const logout = () => signOut(auth);
+export const resetPassword = (email) => {
+  return sendPasswordResetEmail(auth, email);
+};
+
 
 export { app };

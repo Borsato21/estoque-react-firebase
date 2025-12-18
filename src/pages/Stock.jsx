@@ -8,16 +8,29 @@ import {
 import AddProductModal from "../components/AddProductModal";
 import ProductCard from "../components/ProductCard";
 import "../styles/stock.css";
+import { logout } from "../services/firebase";
+import { useNavigate } from "react-router-dom";
 
 function Stock() {
   const [products, setProducts] = useState([]);
   const [search, setSearch] = useState("");
+  const [typeFilter, setTypeFilter] = useState("todos");
   const [showModal, setShowModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const navigate = useNavigate();
+
+  // 🚪 Logout
+  const handleLogout = async () => {
+    await logout();
+    navigate("/");
+  };
+
+  // 📦 Carregar produtos
   const loadProducts = async () => {
     setLoading(true);
+
     const data = await getProducts();
 
     const list = Object.entries(data || {}).map(([id, value]) => ({
@@ -33,6 +46,7 @@ function Stock() {
     loadProducts();
   }, []);
 
+  // 💾 Salvar (add ou edit)
   const handleSaveProduct = async (product) => {
     if (editingProduct) {
       await updateProduct(editingProduct.id, product);
@@ -45,20 +59,55 @@ function Stock() {
     loadProducts();
   };
 
-  const filteredProducts = products.filter((product) =>
-    product.name.toLowerCase().includes(search.toLowerCase())
-  );
+  // 🔍 Filtro por texto + tipo
+  const filteredProducts = products.filter((product) => {
+    const searchLower = search.toLowerCase();
+
+    const matchesSearch =
+      product.name.toLowerCase().includes(searchLower) ||
+      product.code.toLowerCase().includes(searchLower) ||
+      product.type.toLowerCase().includes(searchLower) ||
+      String(product.quantity).includes(searchLower);
+
+    const matchesType =
+      typeFilter === "todos" ||
+      product.type.toLowerCase() === typeFilter;
+
+    return matchesSearch && matchesType;
+  });
 
   return (
     <div className="stock-container">
-      <h2>Estoque</h2>
+      {/* Topo */}
+      <div className="stock-header-top">
+        <h2>Estoque Blito</h2>
 
+        <button className="logout-btn" onClick={handleLogout}>
+          🚪 Sair
+        </button>
+      </div>
+      <br />
+
+      {/* Pesquisa + filtro + add */}
       <div className="stock-header">
         <input
           placeholder="Pesquisar..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
+
+        <select
+  value={typeFilter}
+  onChange={(e) => setTypeFilter(e.target.value)}
+>
+  <option value="todos">Todos os tipos</option>
+  <option value="toner">Toner</option>
+  <option value="cilindro">Cilindro</option>
+  <option value="tinta">Tinta</option>
+  <option value="fusao">Fusão</option>
+  <option value="pecas diversas">Peças diversas</option>
+</select>
+
 
         <button
           onClick={() => {
@@ -70,30 +119,39 @@ function Stock() {
         </button>
       </div>
 
+      {/* Lista */}
       {loading ? (
         <p>Carregando...</p>
       ) : (
         <div className="stock-grid">
-          {filteredProducts.map((product) => (
-            <ProductCard
-              key={product.id}
-              product={product}
-              onDelete={async () => {
-                await deleteProduct(product.id);
-                loadProducts();
-              }}
-              onEdit={() => {
-                setEditingProduct(product);
-                setShowModal(true);
-              }}
-            />
-          ))}
+          {filteredProducts.length === 0 ? (
+            <p>Nenhum produto encontrado</p>
+          ) : (
+            filteredProducts.map((product) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                onDelete={async () => {
+                  await deleteProduct(product.id);
+                  loadProducts();
+                }}
+                onEdit={() => {
+                  setEditingProduct(product);
+                  setShowModal(true);
+                }}
+              />
+            ))
+          )}
         </div>
       )}
 
+      {/* Modal */}
       {showModal && (
         <AddProductModal
-          onClose={() => setShowModal(false)}
+          onClose={() => {
+            setShowModal(false);
+            setEditingProduct(null);
+          }}
           onSave={handleSaveProduct}
           editingProduct={editingProduct}
         />
