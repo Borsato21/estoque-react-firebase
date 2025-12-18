@@ -66,7 +66,7 @@ function AddProductModal({ onClose, onSave, editingProduct }) {
   <option value="pecas diversas">Peças diversas</option>
   <option value="impressora">Impressora</option>
         </select>
-
+<br /><br />
         <input
           type="number"
           placeholder="Quantidade"

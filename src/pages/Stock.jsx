@@ -7,6 +7,7 @@ import {
 } from "../services/products";
 import AddProductModal from "../components/AddProductModal";
 import ProductCard from "../components/ProductCard";
+import ReportModal from "../components/ReportModal"; // 👈 novo
 import "../styles/stock.css";
 import { logout } from "../services/firebase";
 import { useNavigate } from "react-router-dom";
@@ -16,6 +17,7 @@ function Stock() {
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("todos");
   const [showModal, setShowModal] = useState(false);
+  const [showReport, setShowReport] = useState(false); // 👈 novo
   const [editingProduct, setEditingProduct] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -82,10 +84,17 @@ function Stock() {
       <div className="stock-header-top">
         <h2>Estoque Blito</h2>
 
-        <button className="logout-btn" onClick={handleLogout}>
-          🚪 Sair
-        </button>
+        <div style={{ display: "flex", gap: "10px" }}>
+          <button onClick={() => setShowReport(true)}>
+            📄 Relatório
+          </button>
+
+          <button className="logout-btn" onClick={handleLogout}>
+            🚪 Sair
+          </button>
+        </div>
       </div>
+
       <br />
 
       {/* Pesquisa + filtro + add */}
@@ -97,18 +106,17 @@ function Stock() {
         />
 
         <select
-  value={typeFilter}
-  onChange={(e) => setTypeFilter(e.target.value)}
->
-  <option value="todos">Todos os tipos</option>
-  <option value="toner">Toner</option>
-  <option value="cilindro">Cilindro</option>
-  <option value="tinta">Tinta</option>
-  <option value="fusao">Fusão</option>
-  <option value="pecas diversas">Peças diversas</option>
-  <option value="impressora">Impressora</option>
-</select>
-
+          value={typeFilter}
+          onChange={(e) => setTypeFilter(e.target.value)}
+        >
+          <option value="todos">Todos os tipos</option>
+          <option value="toner">Toner</option>
+          <option value="cilindro">Cilindro</option>
+          <option value="tinta">Tinta</option>
+          <option value="fusao">Fusão</option>
+          <option value="pecas diversas">Peças diversas</option>
+          <option value="impressora">Impressora</option>
+        </select>
 
         <button
           onClick={() => {
@@ -146,7 +154,7 @@ function Stock() {
         </div>
       )}
 
-      {/* Modal */}
+      {/* Modal Add / Edit */}
       {showModal && (
         <AddProductModal
           onClose={() => {
@@ -155,6 +163,14 @@ function Stock() {
           }}
           onSave={handleSaveProduct}
           editingProduct={editingProduct}
+        />
+      )}
+
+      {/* Modal Relatório */}
+      {showReport && (
+        <ReportModal
+          products={products}
+          onClose={() => setShowReport(false)}
         />
       )}
     </div>
