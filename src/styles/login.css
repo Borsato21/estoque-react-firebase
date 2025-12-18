@@ -75,6 +75,31 @@ body {
   font-size: 14px;
 }
 
+.input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.input-wrapper input {
+  width: 100%;
+  padding-right: 42px; /* espaço pro olho */
+}
+
+.eye-icon {
+  padding-bottom: 15px;
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  font-size: 18px;
+  user-select: none;
+}
+
+.eye-icon:hover {
+  opacity: 0.7;
+}
+
 /* Responsivo */
 @media (max-width: 480px) {
   .login-card {

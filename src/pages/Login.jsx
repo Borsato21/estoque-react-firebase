@@ -11,11 +11,14 @@ function Login() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [showForgot, setShowForgot] = useState(false);
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    setError("");
+
     try {
       await signInWithEmailAndPassword(auth, email, password);
       navigate("/estoque");
@@ -38,32 +41,41 @@ function Login() {
             required
           />
 
-          <input
-            type="password"
-            placeholder="Senha"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
+          {/* Campo senha com ícone dentro */}
+          <div className="input-wrapper">
+            <input
+              type={showPassword ? "text" : "password"}
+              placeholder="Senha"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+
+            <span
+              className="eye-icon"
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? "🙈" : "👁️"}
+            </span>
+          </div>
 
           <button type="submit">Entrar</button>
-          <p
-  className="forgot-password"
-  onClick={() => setShowForgot(true)}
->
-  Esqueceu a senha?
-</p>
 
+          <p
+            className="forgot-password"
+            onClick={() => setShowForgot(true)}
+          >
+            Esqueceu a senha?
+          </p>
         </form>
 
         {error && <p className="error-text">{error}</p>}
       </div>
-      {showForgot && (
-  <ForgotPasswordModal onClose={() => setShowForgot(false)} />
-)}
 
+      {showForgot && (
+        <ForgotPasswordModal onClose={() => setShowForgot(false)} />
+      )}
     </div>
-    
   );
 }
 
