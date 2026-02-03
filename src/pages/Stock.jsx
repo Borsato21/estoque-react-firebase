@@ -1,13 +1,13 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import {
   addProduct,
   deleteProduct,
-  getProducts,
   updateProduct,
+  listenProducts,
 } from "../services/products";
 import AddProductModal from "../components/AddProductModal";
 import ProductCard from "../components/ProductCard";
-import ReportModal from "../components/ReportModal"; // 👈 novo
+import ReportModal from "../components/ReportModal";
 import "../styles/stock.css";
 import { logout } from "../services/firebase";
 import { useNavigate } from "react-router-dom";
@@ -17,66 +17,63 @@ function Stock() {
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("todos");
   const [showModal, setShowModal] = useState(false);
-  const [showReport, setShowReport] = useState(false); // 👈 novo
+  const [showReport, setShowReport] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const navigate = useNavigate();
 
   // 🚪 Logout
-  const handleLogout = async () => {
+  const handleLogout = useCallback(async () => {
     await logout();
     navigate("/");
-  };
+  }, [navigate]);
 
-  // 📦 Carregar produtos
-  const loadProducts = async () => {
+  // ⚡ Listener Realtime Database (SEM UID)
+  useEffect(() => {
     setLoading(true);
 
-    const data = await getProducts();
+    const unsubscribe = listenProducts((list) => {
+      setProducts(list);
+      setLoading(false);
+    });
 
-    const list = Object.entries(data || {}).map(([id, value]) => ({
-      id,
-      ...value,
-    }));
-
-    setProducts(list);
-    setLoading(false);
-  };
-
-  useEffect(() => {
-    loadProducts();
+    return () => unsubscribe();
   }, []);
 
-  // 💾 Salvar (add ou edit)
-  const handleSaveProduct = async (product) => {
-    if (editingProduct) {
-      await updateProduct(editingProduct.id, product);
-    } else {
-      await addProduct(product);
-    }
+  // 💾 Salvar produto
+  const handleSaveProduct = useCallback(
+    async (product) => {
+      if (editingProduct) {
+        await updateProduct(editingProduct.id, product);
+      } else {
+        await addProduct(product);
+      }
 
-    setEditingProduct(null);
-    setShowModal(false);
-    loadProducts();
-  };
+      setEditingProduct(null);
+      setShowModal(false);
+    },
+    [editingProduct]
+  );
 
-  // 🔍 Filtro por texto + tipo
-  const filteredProducts = products.filter((product) => {
+  // 🔍 Filtro (opcional, mas organizado)
+  const filteredProducts = useMemo(() => {
     const searchLower = search.toLowerCase();
 
-    const matchesSearch =
-      product.name.toLowerCase().includes(searchLower) ||
-      product.code.toLowerCase().includes(searchLower) ||
-      product.type.toLowerCase().includes(searchLower) ||
-      String(product.quantity).includes(searchLower);
+    return products.filter((product) => {
+      const matchesSearch =
+        product.name?.toLowerCase().includes(searchLower) ||
+        product.code?.toLowerCase().includes(searchLower) ||
+        product.type?.toLowerCase().includes(searchLower) ||
+        String(product.quantity).includes(searchLower);
 
-    const matchesType =
-      typeFilter === "todos" ||
-      product.type.toLowerCase() === typeFilter;
+      const matchesType =
+        typeFilter === "todos" ||
+        product.type?.toLowerCase() === typeFilter;
 
-    return matchesSearch && matchesType;
-  });
+      return matchesSearch && matchesType;
+    });
+  }, [products, search, typeFilter]);
 
   return (
     <div className="stock-container">
@@ -85,10 +82,7 @@ function Stock() {
         <h2>Estoque Blito</h2>
 
         <div style={{ display: "flex", gap: "10px" }}>
-          <button onClick={() => setShowReport(true)}>
-            📄 Relatório
-          </button>
-
+          <button onClick={() => setShowReport(true)}>📄 Relatório</button>
           <button className="logout-btn" onClick={handleLogout}>
             🚪 Sair
           </button>
@@ -97,7 +91,7 @@ function Stock() {
 
       <br />
 
-      {/* Pesquisa + filtro + add */}
+      {/* Pesquisa + filtros */}
       <div className="stock-header">
         <input
           placeholder="Pesquisar..."
@@ -142,7 +136,6 @@ function Stock() {
                 product={product}
                 onDelete={async () => {
                   await deleteProduct(product.id);
-                  loadProducts();
                 }}
                 onEdit={() => {
                   setEditingProduct(product);

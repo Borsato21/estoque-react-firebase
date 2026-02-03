@@ -1,4 +1,12 @@
 function ProductCard({ product, onDelete, onEdit }) {
+  {product.image && (
+  <img
+    src={product.image}
+    alt={product.name}
+    loading="lazy"
+  />
+)}
+
   return (
     <div className="product-card">
       <img src={product.image} alt={product.name} />
