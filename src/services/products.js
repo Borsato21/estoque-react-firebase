@@ -1,7 +1,7 @@
 import { ref, push, update, remove, onValue, off } from "firebase/database";
 import { db } from "./firebase";
 
-// 📂 Referência direta (SEM UID)
+// 📂 Referência direta
 const productsRef = ref(db, "products");
 
 // ➕ Adicionar produto
@@ -22,9 +22,9 @@ export const deleteProduct = async (id) => {
   await remove(ref(db, `products/${id}`));
 };
 
-// ⚡ Listener em tempo real (IMPORTANTE)
+// ⚡ Listener geral (lista)
 export const listenProducts = (callback) => {
-  const unsubscribe = onValue(productsRef, (snapshot) => {
+  onValue(productsRef, (snapshot) => {
     if (snapshot.exists()) {
       const data = snapshot.val();
 
@@ -42,4 +42,22 @@ export const listenProducts = (callback) => {
   });
 
   return () => off(productsRef);
+};
+
+// 🖨️ Listener de UMA impressora (por ID)
+export const listenProductById = (id, callback) => {
+  const productRef = ref(db, `products/${id}`);
+
+  onValue(productRef, (snapshot) => {
+    if (snapshot.exists()) {
+      callback({
+        id,
+        ...snapshot.val(),
+      });
+    } else {
+      callback(null);
+    }
+  });
+
+  return () => off(productRef);
 };

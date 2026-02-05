@@ -1,0 +1,84 @@
+.navbar {
+  height: 64px;
+  width: 100%;
+  background-color: #3c5899; 
+  color: #ffffff;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 0 24px;
+  box-sizing: border-box;
+
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+/* Logo */
+.navbar h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+/* Links */
+.nav-links {
+  display: flex;
+  gap: 24px;
+}
+
+.nav-links a {
+  color: #cbd5f5;
+  text-decoration: none;
+  font-size: 15px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.nav-links a:hover {
+  background-color: #1e293b;
+  color: #ffffff;
+}
+
+/* Link ativo */
+.nav-links a.active {
+  background-color: #2563eb;
+  color: #ffffff;
+  font-weight: 500;
+}
+
+/* Botão sair */
+.navbar button {
+  background-color: #ef4444;
+  border: none;
+  color: #ffffff;
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.2s ease;
+}
+
+.navbar button:hover {
+  background-color: #dc2626;
+}
+
+/* Responsivo */
+@media (max-width: 600px) {
+  .navbar h3 {
+    font-size: 16px;
+  }
+
+  .nav-links {
+    gap: 12px;
+  }
+
+  .navbar button {
+    padding: 6px 10px;
+    font-size: 13px;
+  }
+}

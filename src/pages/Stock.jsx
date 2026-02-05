@@ -80,13 +80,6 @@ function Stock() {
       {/* Topo */}
       <div className="stock-header-top">
         <h2>Estoque Blito</h2>
-
-        <div style={{ display: "flex", gap: "10px" }}>
-          <button onClick={() => setShowReport(true)}>📄 Relatório</button>
-          <button className="logout-btn" onClick={handleLogout}>
-            🚪 Sair
-          </button>
-        </div>
       </div>
 
       <br />
@@ -109,7 +102,6 @@ function Stock() {
           <option value="tinta">Tinta</option>
           <option value="fusao">Fusão</option>
           <option value="pecas diversas">Peças diversas</option>
-          <option value="impressora">Impressora</option>
         </select>
 
         <button

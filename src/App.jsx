@@ -1,14 +1,22 @@
-import { Routes, Route } from "react-router-dom";
-import Login from "./pages/Login";
+import { Routes, Route, Navigate } from "react-router-dom";
+import Navbar from "./components/Navbar";
 import Stock from "./pages/Stock";
-
+import Reports from "./pages/Reports";
+import Printers from "./pages/Printers";
 
 function App() {
   return (
-    <Routes>
-      <Route path="/" element={<Login />} />
-      <Route path="/estoque" element={<Stock />} />
-    </Routes>
+    <>
+      <Navbar />
+
+      <Routes>
+        <Route path="/" element={<Navigate to="/estoque" />} />
+        <Route path="/estoque" element={<Stock />} />
+        <Route path="/impressoras" element={<Printers />} />
+        <Route path="/relatorios" element={<Reports />} />
+        <Route path="*" element={<h2>Página não encontrada</h2>} />
+      </Routes>
+    </>
   );
 }
 

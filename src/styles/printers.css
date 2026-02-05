@@ -1,0 +1,130 @@
+/* ============================= */
+/* 🖨️ PÁGINA DE IMPRESSORAS */
+/* ============================= */
+
+.printers-container {
+  padding: 25px 30px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.printers-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+.printers-header h2 {
+  font-size: 22px;
+  color: #222;
+}
+
+.printers-header button {
+  background: #0088fe;
+  color: #fff;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.printers-header button:hover {
+  opacity: 0.85;
+}
+
+/* ============================= */
+/* 🧱 GRID */
+/* ============================= */
+
+.printers-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 20px;
+}
+
+/* ============================= */
+/* 🖨️ CARD IMPRESSORA */
+/* ============================= */
+
+.printer-card {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 18px 20px;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
+  transition: 0.25s;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.printer-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.12);
+}
+
+.printer-card h4 {
+  font-size: 17px;
+  color: #111;
+  margin-bottom: 8px;
+}
+
+.printer-card p {
+  font-size: 14px;
+  color: #444;
+  margin-bottom: 4px;
+}
+
+.printer-card p strong {
+  color: #000;
+}
+
+/* ============================= */
+/* 🎛️ AÇÕES */
+/* ============================= */
+
+.card-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.card-actions button {
+  flex: 1;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 0;
+  cursor: pointer;
+  font-size: 15px;
+  transition: 0.2s;
+}
+
+.card-actions button:first-child {
+  background: #f1c40f;
+}
+
+.card-actions button:last-child {
+  background: #e74c3c;
+}
+
+.card-actions button:hover {
+  opacity: 0.85;
+}
+
+/* ============================= */
+/* 📱 RESPONSIVO */
+/* ============================= */
+
+@media (max-width: 768px) {
+  .printers-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .printers-header button {
+    width: 100%;
+  }
+}

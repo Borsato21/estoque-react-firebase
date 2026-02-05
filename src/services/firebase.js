@@ -15,7 +15,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 
 export const auth = getAuth(app);
-export const db = getDatabase(app); // 🔥 ISSO É O PONTO CRÍTICO
+export const db = getDatabase(app); 
 export const logout = () => signOut(auth);
 export const resetPassword = (email) =>
   sendPasswordResetEmail(auth, email);
