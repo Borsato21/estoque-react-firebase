@@ -3,32 +3,36 @@ import { useNavigate } from "react-router-dom";
 function ProductCard({ product, onDelete, onEdit }) {
   const navigate = useNavigate();
 
+  // 🔥 Só deixa clicável se for impressora (opcional)
   const handleClick = () => {
-    if (product.type === "impressora") {
-      navigate(`/impressoras/${product.id}`);
+    if (product.tipo === "impressora") {
+      navigate(`/printers/${product.id}`);
     }
   };
 
   return (
     <div
       className={`product-card ${
-        product.type === "impressora" ? "clickable" : ""
+        product.tipo === "impressora" ? "clickable" : ""
       }`}
       onClick={handleClick}
     >
-      {product.image && (
+      {/* 🖼 IMAGEM */}
+      {product.imagem_url && (
         <img
-          src={product.image}
-          alt={product.name}
+          src={product.imagem_url}
+          alt={product.nome}
           loading="lazy"
         />
       )}
 
-      <h4>{product.name}</h4>
-      <p>Código: {product.code || "-"}</p>
-      <p>Tipo: {product.type}</p>
-      <p>Qtd: {product.quantity}</p>
+      {/* 📦 DADOS */}
+      <h4>{product.nome}</h4>
+      <p>Código: {product.codigo || "-"}</p>
+      <p>Tipo: {product.tipo}</p>
+      <p>Qtd: {product.quantidade}</p>
 
+      {/* ✏️ AÇÕES */}
       <div className="card-actions">
         <button
           className="edit-btn"

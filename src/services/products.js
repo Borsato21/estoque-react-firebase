@@ -1,63 +1,42 @@
-import { ref, push, update, remove, onValue, off } from "firebase/database";
-import { db } from "./firebase";
+import { supabase } from "./supabaseClient";
 
-// 📂 Referência direta
-const productsRef = ref(db, "products");
+// 🔹 Buscar produtos
+export async function getProducts() {
+  const { data, error } = await supabase
+    .from("produtos")
+    .select("*")
+    .order("created_at", { ascending: false });
 
-// ➕ Adicionar produto
-export const addProduct = async (product) => {
-  await push(productsRef, {
-    ...product,
-    createdAt: Date.now(),
-  });
-};
+  if (error) throw error;
 
-// ✏️ Atualizar produto
-export const updateProduct = async (id, product) => {
-  await update(ref(db, `products/${id}`), product);
-};
+  return data;
+}
 
-// ❌ Excluir produto
-export const deleteProduct = async (id) => {
-  await remove(ref(db, `products/${id}`));
-};
+// 🔹 Adicionar produto
+export async function addProduct(product) {
+  const { error } = await supabase
+    .from("produtos")
+    .insert([product]);
 
-// ⚡ Listener geral (lista)
-export const listenProducts = (callback) => {
-  onValue(productsRef, (snapshot) => {
-    if (snapshot.exists()) {
-      const data = snapshot.val();
+  if (error) throw error;
+}
 
-      const list = Object.entries(data)
-        .map(([id, value]) => ({
-          id,
-          ...value,
-        }))
-        .sort((a, b) => b.createdAt - a.createdAt);
+// 🔹 Atualizar produto
+export async function updateProduct(id, product) {
+  const { error } = await supabase
+    .from("produtos")
+    .update(product)
+    .eq("id", id);
 
-      callback(list);
-    } else {
-      callback([]);
-    }
-  });
+  if (error) throw error;
+}
 
-  return () => off(productsRef);
-};
+// 🔹 Deletar produto
+export async function deleteProduct(id) {
+  const { error } = await supabase
+    .from("produtos")
+    .delete()
+    .eq("id", id);
 
-// 🖨️ Listener de UMA impressora (por ID)
-export const listenProductById = (id, callback) => {
-  const productRef = ref(db, `products/${id}`);
-
-  onValue(productRef, (snapshot) => {
-    if (snapshot.exists()) {
-      callback({
-        id,
-        ...snapshot.val(),
-      });
-    } else {
-      callback(null);
-    }
-  });
-
-  return () => off(productRef);
-};
+  if (error) throw error;
+}

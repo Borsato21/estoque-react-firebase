@@ -3,11 +3,11 @@ import {
   addProduct,
   deleteProduct,
   updateProduct,
-  listenProducts,
+  getProducts,
 } from "../services/products";
+
 import AddProductModal from "../components/AddProductModal";
 import ProductCard from "../components/ProductCard";
-import ReportModal from "../components/ReportModal";
 import "../styles/stock.css";
 import { logout } from "../services/firebase";
 import { useNavigate } from "react-router-dom";
@@ -17,59 +17,64 @@ function Stock() {
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("todos");
   const [showModal, setShowModal] = useState(false);
-  const [showReport, setShowReport] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const navigate = useNavigate();
 
-  // 🚪 Logout
   const handleLogout = useCallback(async () => {
     await logout();
     navigate("/");
   }, [navigate]);
 
-  // ⚡ Listener Realtime Database (SEM UID)
-  useEffect(() => {
-    setLoading(true);
-
-    const unsubscribe = listenProducts((list) => {
-      setProducts(list);
+  async function loadProducts() {
+    try {
+      setLoading(true);
+      const data = await getProducts();
+      setProducts(data);
+    } catch (error) {
+      console.error("Erro ao carregar produtos:", error);
+    } finally {
       setLoading(false);
-    });
+    }
+  }
 
-    return () => unsubscribe();
+  useEffect(() => {
+    loadProducts();
   }, []);
 
-  // 💾 Salvar produto
   const handleSaveProduct = useCallback(
     async (product) => {
-      if (editingProduct) {
-        await updateProduct(editingProduct.id, product);
-      } else {
-        await addProduct(product);
-      }
+      try {
+        if (editingProduct) {
+          await updateProduct(editingProduct.id, product);
+        } else {
+          await addProduct(product);
+        }
 
-      setEditingProduct(null);
-      setShowModal(false);
+        await loadProducts();
+        setEditingProduct(null);
+        setShowModal(false);
+      } catch (error) {
+        console.error("Erro ao salvar produto:", error);
+      }
     },
     [editingProduct]
   );
 
-  // 🔍 Filtro (opcional, mas organizado)
   const filteredProducts = useMemo(() => {
     const searchLower = search.toLowerCase();
 
     return products.filter((product) => {
       const matchesSearch =
-        product.name?.toLowerCase().includes(searchLower) ||
-        product.code?.toLowerCase().includes(searchLower) ||
-        product.type?.toLowerCase().includes(searchLower) ||
-        String(product.quantity).includes(searchLower);
+        product.nome?.toLowerCase().includes(searchLower) ||
+        product.codigo?.toLowerCase().includes(searchLower) ||
+        product.tipo?.toLowerCase().includes(searchLower) ||
+        String(product.quantidade).includes(searchLower);
 
       const matchesType =
         typeFilter === "todos" ||
-        product.type?.toLowerCase() === typeFilter;
+        product.tipo?.toLowerCase() === typeFilter;
 
       return matchesSearch && matchesType;
     });
@@ -77,14 +82,12 @@ function Stock() {
 
   return (
     <div className="stock-container">
-      {/* Topo */}
       <div className="stock-header-top">
         <h2>Estoque Blito</h2>
       </div>
 
       <br />
 
-      {/* Pesquisa + filtros */}
       <div className="stock-header">
         <input
           placeholder="Pesquisar..."
@@ -114,7 +117,6 @@ function Stock() {
         </button>
       </div>
 
-      {/* Lista */}
       {loading ? (
         <p>Carregando...</p>
       ) : (
@@ -128,6 +130,7 @@ function Stock() {
                 product={product}
                 onDelete={async () => {
                   await deleteProduct(product.id);
+                  await loadProducts();
                 }}
                 onEdit={() => {
                   setEditingProduct(product);
@@ -139,7 +142,6 @@ function Stock() {
         </div>
       )}
 
-      {/* Modal Add / Edit */}
       {showModal && (
         <AddProductModal
           onClose={() => {
@@ -148,14 +150,6 @@ function Stock() {
           }}
           onSave={handleSaveProduct}
           editingProduct={editingProduct}
-        />
-      )}
-
-      {/* Modal Relatório */}
-      {showReport && (
-        <ReportModal
-          products={products}
-          onClose={() => setShowReport(false)}
         />
       )}
     </div>

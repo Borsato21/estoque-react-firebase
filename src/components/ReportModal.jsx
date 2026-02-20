@@ -5,7 +5,7 @@ import * as XLSX from "xlsx";
 
 function ReportModal({ products, onClose }) {
   const [type, setType] = useState("todos");
-  const [orderBy, setOrderBy] = useState("name");
+  const [orderBy, setOrderBy] = useState("nome");
   const [order, setOrder] = useState("asc");
 
   const normalize = (text = "") =>
@@ -13,29 +13,31 @@ function ReportModal({ products, onClose }) {
 
   const filtered = products
     .filter((p) =>
-      type === "todos" ? true : normalize(p.type) === normalize(type)
+      type === "todos" ? true : normalize(p.tipo) === normalize(type)
     )
     .sort((a, b) => {
-      const valueA = orderBy === "name" ? a.name : a.quantity;
-      const valueB = orderBy === "name" ? b.name : b.quantity;
+      const valueA =
+        orderBy === "nome" ? a.nome : a.quantidade;
+
+      const valueB =
+        orderBy === "nome" ? b.nome : b.quantidade;
 
       if (valueA < valueB) return order === "asc" ? -1 : 1;
       if (valueA > valueB) return order === "asc" ? 1 : -1;
       return 0;
     });
 
-  // 📊 EXCEL (.xlsx)
+  // 📊 EXCEL
   const exportExcel = () => {
     const data = filtered.map((p) => ({
-      Nome: p.name,
-      Código: p.code,
-      Tipo: p.type,
-      Quantidade: p.quantity,
+      Nome: p.nome,
+      Código: p.codigo,
+      Tipo: p.tipo,
+      Quantidade: p.quantidade,
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(data);
     const workbook = XLSX.utils.book_new();
-
     XLSX.utils.book_append_sheet(workbook, worksheet, "Estoque");
 
     XLSX.writeFile(workbook, "relatorio-estoque.xlsx");
@@ -59,13 +61,11 @@ function ReportModal({ products, onClose }) {
       startY: 28,
       head: [["Nome", "Código", "Tipo", "Quantidade"]],
       body: filtered.map((p) => [
-        p.name,
-        p.code,
-        p.type,
-        p.quantity,
+        p.nome,
+        p.codigo,
+        p.tipo,
+        p.quantidade,
       ]),
-      styles: { fontSize: 10 },
-      headStyles: { fillColor: [30, 30, 30] },
     });
 
     doc.save("relatorio-estoque.pdf");
@@ -91,9 +91,12 @@ function ReportModal({ products, onClose }) {
             <option value="impressora">Impressora</option>
           </select>
 
-          <select value={orderBy} onChange={(e) => setOrderBy(e.target.value)}>
-            <option value="name">Nome</option>
-            <option value="quantity">Quantidade</option>
+          <select
+            value={orderBy}
+            onChange={(e) => setOrderBy(e.target.value)}
+          >
+            <option value="nome">Nome</option>
+            <option value="quantidade">Quantidade</option>
           </select>
 
           <select value={order} onChange={(e) => setOrder(e.target.value)}>
@@ -117,12 +120,12 @@ function ReportModal({ products, onClose }) {
             </tr>
           </thead>
           <tbody>
-            {filtered.map((p, i) => (
-              <tr key={i}>
-                <td>{p.name}</td>
-                <td>{p.code}</td>
-                <td>{p.type}</td>
-                <td>{p.quantity}</td>
+            {filtered.map((p) => (
+              <tr key={p.id}>
+                <td>{p.nome}</td>
+                <td>{p.codigo}</td>
+                <td>{p.tipo}</td>
+                <td>{p.quantidade}</td>
               </tr>
             ))}
           </tbody>

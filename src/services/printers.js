@@ -1,40 +1,51 @@
-import { ref, push, update, remove, onValue, off } from "firebase/database";
-import { db } from "./firebase";
+import { supabase } from "./supabaseClient";
 
-const printersRef = ref(db, "printers");
+export async function getPrinters() {
+  const { data, error } = await supabase
+    .from("impressoras")
+    .select("*");
 
-// ➕ Adicionar impressora
-export const addPrinter = async (printer) => {
-  await push(printersRef, {
-    ...printer,
-    createdAt: Date.now(),
-  });
-};
+  if (error) throw error;
 
-// ✏️ Atualizar impressora
-export const updatePrinter = async (id, printer) => {
-  await update(ref(db, `printers/${id}`), printer);
-};
+  // Converter snake_case → camelCase
+  return data.map(p => ({
+    ...p,
+    serialNumber: p.serial_number
+  }));
+}
 
-// ❌ Excluir impressora
-export const deletePrinter = async (id) => {
-  await remove(ref(db, `printers/${id}`));
-};
+export async function addPrinter(printer) {
+  const { error } = await supabase
+    .from("impressoras")
+    .insert([{
+      model: printer.model,
+      serial_number: printer.serialNumber,
+      counter: printer.counter,
+      observation: printer.observation
+    }]);
 
-// ⚡ Listener realtime
-export const listenPrinters = (callback) => {
-  onValue(printersRef, (snapshot) => {
-    if (snapshot.exists()) {
-      const data = snapshot.val();
-      const list = Object.entries(data)
-        .map(([id, value]) => ({ id, ...value }))
-        .sort((a, b) => b.createdAt - a.createdAt);
+  if (error) throw error;
+}
 
-      callback(list);
-    } else {
-      callback([]);
-    }
-  });
+export async function updatePrinter(id, printer) {
+  const { error } = await supabase
+    .from("impressoras")
+    .update({
+      model: printer.model,
+      serial_number: printer.serialNumber,
+      counter: Number(printer.counter),
+      observation: printer.observation
+    })
+    .eq("id", id);
 
-  return () => off(printersRef);
-};
+  if (error) throw error;
+}
+
+export async function deletePrinter(id) {
+  const { error } = await supabase
+    .from("impressoras")
+    .delete()
+    .eq("id", id);
+
+  if (error) throw error;
+}
