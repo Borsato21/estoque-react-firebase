@@ -60,7 +60,13 @@ function AddProductModal({ onClose, onSave, editingProduct }) {
           ) : (
             <span>Selecionar imagem</span>
           )}
-          <input type="file" accept="image/*" hidden onChange={handleImageChange} />
+          <input
+  type="file"
+  accept="image/*"
+  capture="environment"
+  hidden
+  onChange={handleImageChange}
+/>
         </label>
 
         <input
