@@ -31,6 +31,7 @@ function ProductCard({ product, onDelete, onEdit }) {
       <p>Código: {product.codigo || "-"}</p>
       <p>Tipo: {product.tipo}</p>
       <p>Qtd: {product.quantidade}</p>
+      <p>Obs: {product.observacao}</p>
 
       {/* ✏️ AÇÕES */}
       <div className="card-actions">

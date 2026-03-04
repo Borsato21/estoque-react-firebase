@@ -4,6 +4,7 @@ function AddProductModal({ onClose, onSave, editingProduct }) {
   const [nome, setNome] = useState(editingProduct?.nome || "");
   const [codigo, setCodigo] = useState(editingProduct?.codigo || "");
   const [tipo, setTipo] = useState(editingProduct?.tipo || "");
+  const [observacao, setObservacao] = useState("");
   const [quantidade, setQuantidade] = useState(
     editingProduct?.quantidade || ""
   );
@@ -35,6 +36,7 @@ function AddProductModal({ onClose, onSave, editingProduct }) {
       tipo,
       quantidade: Number(quantidade),
       imagem_url,
+      observacao,
     };
 
     await onSave(productData);
@@ -88,6 +90,12 @@ function AddProductModal({ onClose, onSave, editingProduct }) {
           value={quantidade}
           onChange={(e) => setQuantidade(e.target.value)}
         />
+        <textarea
+  placeholder="Observação"
+  value={observacao}
+  onChange={(e) => setObservacao(e.target.value)}
+  className="input"
+></textarea>
 
         <button onClick={handleSave} disabled={loading}>
           {loading ? "Salvando..." : "Salvar"}

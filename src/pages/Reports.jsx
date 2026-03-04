@@ -1,6 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
-import { ref, onValue, off } from "firebase/database";
-import { db } from "../services/firebase";
+import { getProducts } from "../services/products";
 
 import {
   PieChart,
@@ -43,27 +42,33 @@ export default function Reports() {
 
   // 🔥 Buscar produtos
   useEffect(() => {
-    const productsRef = ref(db, "products");
+  async function carregarProdutos() {
+    try {
+      const data = await getProducts();
 
-    onValue(productsRef, (snapshot) => {
-      if (snapshot.exists()) {
-        const data = snapshot.val();
-        const list = Object.entries(data).map(([id, value]) => ({
-          id,
-          ...value,
-          quantity: Number(value.quantity || 0),
-          createdAt: value.createdAt || null,
-          movementType: value.movementType || "entrada", // fallback
-        }));
-        setProducts(list);
-      } else {
-        setProducts([]);
-      }
+      const list = data.map((p) => ({
+        id: p.id,
+        name: p.nome,
+        code: p.codigo,
+        type: p.tipo,
+        quantity: Number(p.quantidade || 0),
+        createdAt: p.created_at,
+        observacao: p.observacao || "",
+        movementType: "entrada", // como não existe na tabela
+      }));
+
+      console.log(list); // pode deixar pra testar
+
+      setProducts(list);
+    } catch (error) {
+      console.error("Erro ao buscar produtos:", error);
+    } finally {
       setLoading(false);
-    });
+    }
+  }
 
-    return () => off(productsRef);
-  }, []);
+  carregarProdutos();
+}, []);
 
   // ===============================
   // 📊 GRÁFICO 1 – ESTOQUE ATUAL
