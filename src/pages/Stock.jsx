@@ -8,6 +8,8 @@ import {
 
 import AddProductModal from "../components/AddProductModal";
 import ProductCard from "../components/ProductCard";
+import MovimentacaoModal from "../components/MovimentacaoModal";
+
 import "../styles/stock.css";
 import { logout } from "../services/firebase";
 import { useNavigate } from "react-router-dom";
@@ -20,6 +22,10 @@ function Stock() {
   const [editingProduct, setEditingProduct] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // 🔥 NOVOS STATES
+  const [openMoveModal, setOpenMoveModal] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+
   const navigate = useNavigate();
 
   const handleLogout = useCallback(async () => {
@@ -31,6 +37,7 @@ function Stock() {
     try {
       setLoading(true);
       const data = await getProducts();
+      console.log("PRODUTOS DO BANCO:", data);
       setProducts(data);
     } catch (error) {
       console.error("Erro ao carregar produtos:", error);
@@ -63,22 +70,27 @@ function Stock() {
   );
 
   const filteredProducts = useMemo(() => {
-    const searchLower = search.toLowerCase();
+  const searchLower = search.toLowerCase().trim();
 
-    return products.filter((product) => {
-      const matchesSearch =
-        product.nome?.toLowerCase().includes(searchLower) ||
-        product.codigo?.toLowerCase().includes(searchLower) ||
-        product.tipo?.toLowerCase().includes(searchLower) ||
-        String(product.quantidade).includes(searchLower);
+  return products.filter((product) => {
+    const nome = (product.nome || "").toLowerCase().trim();
+    const codigo = (product.codigo || "").toLowerCase().trim();
+    const tipo = (product.tipo || "").toLowerCase().trim();
+    const quantidade = String(product.quantidade || "");
 
-      const matchesType =
-        typeFilter === "todos" ||
-        product.tipo?.toLowerCase() === typeFilter;
+    const matchesSearch =
+      nome.includes(searchLower) ||
+      codigo.includes(searchLower) ||
+      tipo.includes(searchLower) ||
+      quantidade.includes(searchLower);
 
-      return matchesSearch && matchesType;
-    });
-  }, [products, search, typeFilter]);
+    const matchesType =
+      typeFilter === "todos" ||
+      tipo === typeFilter.toLowerCase().trim();
+
+    return matchesSearch && matchesType;
+  });
+}, [products, search, typeFilter]);
 
   return (
     <div className="stock-container">
@@ -136,6 +148,10 @@ function Stock() {
                   setEditingProduct(product);
                   setShowModal(true);
                 }}
+                onMove={(product) => {
+                  setSelectedProduct(product);
+                  setOpenMoveModal(true);
+                }}
               />
             ))
           )}
@@ -152,6 +168,14 @@ function Stock() {
           editingProduct={editingProduct}
         />
       )}
+
+      {/* 🔥 MODAL DE MOVIMENTAÇÃO */}
+      <MovimentacaoModal
+        open={openMoveModal}
+        onClose={() => setOpenMoveModal(false)}
+        product={selectedProduct}
+        onSuccess={loadProducts}
+      />
     </div>
   );
 }

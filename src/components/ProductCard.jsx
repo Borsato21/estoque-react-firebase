@@ -1,9 +1,8 @@
 import { useNavigate } from "react-router-dom";
 
-function ProductCard({ product, onDelete, onEdit }) {
+function ProductCard({ product, onDelete, onEdit, onMove }) {
   const navigate = useNavigate();
 
-  // 🔥 Só deixa clicável se for impressora (opcional)
   const handleClick = () => {
     if (product.tipo === "impressora") {
       navigate(`/printers/${product.id}`);
@@ -11,13 +10,7 @@ function ProductCard({ product, onDelete, onEdit }) {
   };
 
   return (
-    <div
-      className={`product-card ${
-        product.tipo === "impressora" ? "clickable" : ""
-      }`}
-      onClick={handleClick}
-    >
-      {/* 🖼 IMAGEM */}
+    <div className="product-card" onClick={handleClick}>
       {product.imagem_url && (
         <img
           src={product.imagem_url}
@@ -26,17 +19,14 @@ function ProductCard({ product, onDelete, onEdit }) {
         />
       )}
 
-      {/* 📦 DADOS */}
       <h4>{product.nome}</h4>
       <p>Código: {product.codigo || "-"}</p>
       <p>Tipo: {product.tipo}</p>
       <p>Qtd: {product.quantidade}</p>
-      <p>Obs: {product.observacao}</p>
+      <p>Obs: {product.observacao || "-"}</p>
 
-      {/* ✏️ AÇÕES */}
       <div className="card-actions">
         <button
-          className="edit-btn"
           onClick={(e) => {
             e.stopPropagation();
             onEdit();
@@ -46,13 +36,21 @@ function ProductCard({ product, onDelete, onEdit }) {
         </button>
 
         <button
-          className="delete-btn"
           onClick={(e) => {
             e.stopPropagation();
             onDelete();
           }}
         >
           🗑️
+        </button>
+
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onMove(product);
+          }}
+        >
+          🔄
         </button>
       </div>
     </div>

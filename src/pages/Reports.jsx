@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { getProducts } from "../services/products";
+import { getMovimentacoes } from "../services/movimentacoes";
 
 import {
   PieChart,
@@ -20,191 +21,158 @@ const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#A569BD"];
 
 export default function Reports() {
   const [products, setProducts] = useState([]);
+  const [movimentacoes, setMovimentacoes] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // modal export
   const [openExport, setOpenExport] = useState(false);
   const [exportType, setExportType] = useState(null);
 
-  // filtros exportação
-  const [orderBy, setOrderBy] = useState("name-asc");
-  const [filterType, setFilterType] = useState("all");
-  const [onlyWithStock, setOnlyWithStock] = useState(false);
-
-  // 🔹 FILTROS GRÁFICO 1 (estoque)
-  const [stockType, setStockType] = useState("all");
-
-  // 🔹 FILTROS GRÁFICO 2 (movimentação)
-  const [moveType, setMoveType] = useState("all"); // entrada | saida
-  const [moveProductType, setMoveProductType] = useState("all");
+  const [moveType, setMoveType] = useState("all");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
-  // 🔥 Buscar produtos
+  // 🔥 NOVOS FILTROS
+  const [stockProductType, setStockProductType] = useState("all");
+  const [movementProductType, setMovementProductType] = useState("all");
+
+  /* ================================
+     🔥 CARREGAR DADOS
+  ================================= */
   useEffect(() => {
-  async function carregarProdutos() {
-    try {
-      const data = await getProducts();
+    async function loadData() {
+      try {
+        const produtos = await getProducts();
+        const movs = await getMovimentacoes();
 
-      const list = data.map((p) => ({
-        id: p.id,
-        name: p.nome,
-        code: p.codigo,
-        type: p.tipo,
-        quantity: Number(p.quantidade || 0),
-        createdAt: p.created_at,
-        observacao: p.observacao || "",
-        movementType: "entrada", // como não existe na tabela
-      }));
-
-      console.log(list); // pode deixar pra testar
-
-      setProducts(list);
-    } catch (error) {
-      console.error("Erro ao buscar produtos:", error);
-    } finally {
-      setLoading(false);
+        setProducts(produtos || []);
+        setMovimentacoes(movs || []);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
     }
-  }
 
-  carregarProdutos();
-}, []);
+    loadData();
+  }, []);
 
-  // ===============================
-  // 📊 GRÁFICO 1 – ESTOQUE ATUAL
-  // ===============================
-  const stockData = useMemo(() => {
-    return products.filter((p) => {
-      if (stockType !== "all" && p.type !== stockType) return false;
-      return p.quantity > 0;
+  /* ================================
+     📊 GRÁFICO 1 – ESTOQUE ATUAL
+  ================================= */
+  const byProduct = useMemo(() => {
+    const filtered = products.filter((p) => {
+      if (stockProductType !== "all" && p.tipo !== stockProductType)
+        return false;
+      return true;
     });
-  }, [products, stockType]);
 
-  const byProduct = Object.values(
-    stockData.reduce((acc, p) => {
-      acc[p.name] = acc[p.name] || { name: p.name, value: 0 };
-      acc[p.name].value += p.quantity;
-      return acc;
-    }, {})
-  );
+    return Object.values(
+      filtered.reduce((acc, p) => {
+        acc[p.nome] = acc[p.nome] || { name: p.nome, value: 0 };
+        acc[p.nome].value += Number(p.quantidade || 0);
+        return acc;
+      }, {})
+    );
+  }, [products, stockProductType]);
 
-  // ===============================
-  // 📊 GRÁFICO 2 – MOVIMENTAÇÕES
-  // ===============================
+  /* ================================
+     📊 GRÁFICO 2 – ENTRADA vs SAÍDA
+  ================================= */
   const movementData = useMemo(() => {
-    return products.filter((p) => {
-      if (moveProductType !== "all" && p.type !== moveProductType) return false;
-      if (moveType !== "all" && p.movementType !== moveType) return false;
+    return movimentacoes.filter((m) => {
+      if (moveType !== "all" && m.tipo !== moveType) return false;
 
-      if (startDate && p.createdAt) {
-        if (new Date(p.createdAt) < new Date(startDate)) return false;
+      if (
+        movementProductType !== "all" &&
+        m.produtos?.tipo !== movementProductType
+      )
+        return false;
+
+      if (startDate && m.created_at) {
+        if (new Date(m.created_at) < new Date(startDate)) return false;
       }
 
-      if (endDate && p.createdAt) {
-        if (new Date(p.createdAt) > new Date(endDate)) return false;
+      if (endDate && m.created_at) {
+        if (new Date(m.created_at) > new Date(endDate)) return false;
       }
 
       return true;
     });
-  }, [products, moveType, moveProductType, startDate, endDate]);
+  }, [
+    movimentacoes,
+    moveType,
+    movementProductType,
+    startDate,
+    endDate,
+  ]);
 
   const byType = Object.values(
-    movementData.reduce((acc, p) => {
-      acc[p.type] = acc[p.type] || { name: p.type, value: 0 };
-      acc[p.type].value += p.quantity;
+    movementData.reduce((acc, m) => {
+      acc[m.tipo] = acc[m.tipo] || { name: m.tipo, value: 0 };
+      acc[m.tipo].value += Number(m.quantidade || 0);
       return acc;
     }, {})
   );
 
-  // ===============================
-  // 📤 EXPORTAÇÃO
-  // ===============================
-  const prepareData = () => {
-  let data = [...products];
-
-  // 🔹 filtro tipo produto
-  if (filterType !== "all") {
-    data = data.filter((p) => p.type === filterType);
-  }
-
-  // 🔹 somente com estoque
-  if (onlyWithStock) {
-    data = data.filter((p) => p.quantity > 0);
-  }
-
-  // 🔹 tipo de movimentação
-  if (moveType !== "all") {
-    data = data.filter((p) => p.movementType === moveType);
-  }
-
-  // 🔹 período
-  if (startDate) {
-    data = data.filter(
-      (p) => p.createdAt && new Date(p.createdAt) >= new Date(startDate)
-    );
-  }
-
-  if (endDate) {
-    data = data.filter(
-      (p) => p.createdAt && new Date(p.createdAt) <= new Date(endDate)
-    );
-  }
-
-  // 🔹 ordenação
-  switch (orderBy) {
-    case "name-asc":
-      data.sort((a, b) => a.name.localeCompare(b.name));
-      break;
-    case "name-desc":
-      data.sort((a, b) => b.name.localeCompare(a.name));
-      break;
-    case "qty-asc":
-      data.sort((a, b) => a.quantity - b.quantity);
-      break;
-    case "qty-desc":
-      data.sort((a, b) => b.quantity - a.quantity);
-      break;
-    default:
-      break;
-  }
-
-  return data;
-};
-
-
+  /* ================================
+     📤 EXPORTAÇÃO MOVIMENTAÇÕES
+  ================================= */
   const handleExport = () => {
-    const data = prepareData();
+    const data = movementData;
+
+    if (data.length === 0) {
+      alert("Nenhuma movimentação para exportar.");
+      return;
+    }
 
     if (exportType === "excel") {
       const ws = XLSX.utils.json_to_sheet(
-        data.map((p) => ({
-          Nome: p.name,
-          Código: p.code,
-          Tipo: p.type,
-          Quantidade: p.quantity,
+        data.map((m) => ({
+          Produto: m.produtos?.nome || "-",
+          "Tipo Produto": m.produtos?.tipo || "-",
+          Movimentação: m.tipo,
+          Quantidade: m.quantidade,
+          Data: m.created_at
+            ? new Date(m.created_at).toLocaleDateString()
+            : "-",
+          Observação: m.observacao || "-",
         }))
       );
+
       const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Estoque");
-      XLSX.writeFile(wb, "relatorio-estoque.xlsx");
+      XLSX.utils.book_append_sheet(wb, ws, "Movimentações");
+      XLSX.writeFile(wb, "relatorio-movimentacoes.xlsx");
     }
 
     if (exportType === "pdf") {
       const doc = new jsPDF();
-      doc.text("Relatório de Estoque", 14, 15);
+      doc.text("Relatório de Movimentações", 14, 15);
 
       autoTable(doc, {
         startY: 22,
-        head: [["Nome", "Código", "Tipo", "Quantidade"]],
-        body: data.map((p) => [
-          p.name,
-          p.code,
-          p.type,
-          p.quantity,
+        head: [
+          [
+            "Produto",
+            "Tipo Produto",
+            "Movimentação",
+            "Quantidade",
+            "Data",
+            "Observação",
+          ],
+        ],
+        body: data.map((m) => [
+          m.produtos?.nome || "-",
+          m.produtos?.tipo || "-",
+          m.tipo,
+          m.quantidade,
+          m.created_at
+            ? new Date(m.created_at).toLocaleDateString()
+            : "-",
+          m.observacao || "-",
         ]),
       });
 
-      doc.save("relatorio-estoque.pdf");
+      doc.save("relatorio-movimentacoes.pdf");
     }
 
     setOpenExport(false);
@@ -216,40 +184,43 @@ export default function Reports() {
   return (
     <div className="reports-container">
       <h2>Relatórios</h2>
+
       <div className="report-actions">
-  <button
-    onClick={() => {
-      setExportType("excel");
-      setOpenExport(true);
-    }}
-  >
-    Exportar Excel
-  </button>
+        <button
+          onClick={() => {
+            setExportType("excel");
+            setOpenExport(true);
+          }}
+        >
+          Exportar Excel
+        </button>
 
-  <button
-    onClick={() => {
-      setExportType("pdf");
-      setOpenExport(true);
-    }}
-  >
-    Exportar PDF
-  </button>
-</div>
-
+        <button
+          onClick={() => {
+            setExportType("pdf");
+            setOpenExport(true);
+          }}
+        >
+          Exportar PDF
+        </button>
+      </div>
 
       {/* ===================== */}
       {/* 📊 GRÁFICO 1 */}
       {/* ===================== */}
-      <div className="chart-filters">
-        <h4>Estoque Atual</h4>
-        <select value={stockType} onChange={(e) => setStockType(e.target.value)}>
-          <option value="all">Todos os tipos</option>
-          <option value="toner">Toner</option>
-          <option value="tinta">Tinta</option>
-          <option value="cilindro">Cilindro</option>
-          <option value="fusao">Fusão</option>
-        </select>
-      </div>
+      <h4>Estoque Atual</h4>
+
+      <select
+        value={stockProductType}
+        onChange={(e) => setStockProductType(e.target.value)}
+      >
+        <option value="all">Todos os tipos</option>
+        <option value="toner">Toner</option>
+        <option value="tinta">Tinta</option>
+        <option value="cilindro">Cilindro</option>
+        <option value="fusao">Fusão</option>
+        <option value="pecas diversas">Peças diversas</option>
+      </select>
 
       <div className="chart-box">
         <ResponsiveContainer width="100%" height={300}>
@@ -267,25 +238,37 @@ export default function Reports() {
       {/* ===================== */}
       {/* 📊 GRÁFICO 2 */}
       {/* ===================== */}
-      <div className="chart-filters">
-        <h4>Movimentações</h4>
+      <h4>Movimentações (Entrada vs Saída)</h4>
 
-        <select value={moveProductType} onChange={(e) => setMoveProductType(e.target.value)}>
-          <option value="all">Todos os tipos</option>
-          <option value="toner">Toner</option>
-          <option value="tinta">Tinta</option>
-          <option value="fusao">Fusão</option>
-        </select>
+      <select
+        value={movementProductType}
+        onChange={(e) => setMovementProductType(e.target.value)}
+      >
+        <option value="all">Todos os tipos</option>
+        <option value="toner">Toner</option>
+        <option value="tinta">Tinta</option>
+        <option value="cilindro">Cilindro</option>
+        <option value="fusao">Fusão</option>
+        <option value="pecas diversas">Peças diversas</option>
+      </select>
 
-        <select value={moveType} onChange={(e) => setMoveType(e.target.value)}>
-          <option value="all">Entrada + Saída</option>
-          <option value="entrada">Entrada</option>
-          <option value="saida">Saída</option>
-        </select>
+      <select value={moveType} onChange={(e) => setMoveType(e.target.value)}>
+        <option value="all">Entrada + Saída</option>
+        <option value="entrada">Entrada</option>
+        <option value="saida">Saída</option>
+      </select>
 
-        <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
-        <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
-      </div>
+      <input
+        type="date"
+        value={startDate}
+        onChange={(e) => setStartDate(e.target.value)}
+      />
+
+      <input
+        type="date"
+        value={endDate}
+        onChange={(e) => setEndDate(e.target.value)}
+      />
 
       <div className="chart-box">
         <ResponsiveContainer width="100%" height={300}>
@@ -304,12 +287,6 @@ export default function Reports() {
         open={openExport}
         onClose={() => setOpenExport(false)}
         onConfirm={handleExport}
-        orderBy={orderBy}
-        setOrderBy={setOrderBy}
-        filterType={filterType}
-        setFilterType={setFilterType}
-        onlyWithStock={onlyWithStock}
-        setOnlyWithStock={setOnlyWithStock}
       />
     </div>
   );
