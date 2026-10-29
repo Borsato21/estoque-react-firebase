@@ -1,81 +1,10 @@
-import { useState } from "react";
-import { login } from "../services/auth";
-import { useNavigate } from "react-router-dom";
-import ForgotPasswordModal from "../components/ForgotPasswordModal";
-
-import "../styles/login.css";
-
-function Login() {
-  const navigate = useNavigate();
-
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState("");
-  const [showForgot, setShowForgot] = useState(false);
-
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    setError("");
-
-    try {
-      await login(email, password);
-      navigate("/estoque");
-    } catch {
-      setError("Email ou senha inválidos");
-    }
-  };
-
-  return (
-    <div className="login-container">
-      <div className="login-card">
-        <h2>Estoque Blito</h2>
-
-        <form onSubmit={handleLogin}>
-          <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-
-          {/* Campo senha com ícone dentro */}
-          <div className="input-wrapper">
-            <input
-              type={showPassword ? "text" : "password"}
-              placeholder="Senha"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-
-            <span
-              className="eye-icon"
-              onClick={() => setShowPassword(!showPassword)}
-            >
-              {showPassword ? "🙈" : "👁️"}
-            </span>
-          </div>
-
-          <button type="submit">Entrar</button>
-
-          <p
-            className="forgot-password"
-            onClick={() => setShowForgot(true)}
-          >
-            Esqueceu a senha?
-          </p>
-        </form>
-
-        {error && <p className="error-text">{error}</p>}
-      </div>
-
-      {showForgot && (
-        <ForgotPasswordModal onClose={() => setShowForgot(false)} />
-      )}
-    </div>
-  );
+import { useState } from 'react';
+import { login } from '../services/auth';
+import { useNavigate } from 'react-router-dom';
+import ForgotPasswordModal from '../components/ForgotPasswordModal';
+import Icon from '../components/Icon';
+export default function Login() {
+  const navigate = useNavigate(); const [email,setEmail] = useState(''); const [password,setPassword] = useState(''); const [showPassword,setShowPassword] = useState(false); const [error,setError] = useState(''); const [showForgot,setShowForgot] = useState(false); const [loading,setLoading] = useState(false);
+  async function handleLogin(event) {event.preventDefault();setError('');setLoading(true);try {await login(email,password);navigate('/estoque');} catch {setError('Não foi possível entrar. Confira seu email e sua senha.');} finally {setLoading(false);} }
+  return <main className="login-page"><section className="login-brand-panel"><div className="brand"><img src="/LogoBlito.png" alt=""/><span>blito<span className="brand-caption">Copiadoras</span></span></div><div className="login-intro"><Icon name="stock" size={44}/><h2>Cada material.<br/>Cada movimento.</h2><p>O estoque da Blito, organizado para acompanhar o ritmo da sua operação.</p><div className="print-register" aria-hidden="true"><span>Toner</span><span>Tinta</span><span>Peças</span><span>Equipamentos</span></div></div><p className="login-company">Blito Copiadoras</p></section><section className="login-form-panel"><div className="login-card"><h1>Acessar o estoque</h1><p>Entre com sua conta da equipe.</p><form className="form-stack" onSubmit={handleLogin}><label>Email<input type="email" autoComplete="username" required value={email} onChange={e => setEmail(e.target.value)} placeholder="seuemail@empresa.com.br"/></label><label>Senha<div className="password-control"><input type={showPassword ? 'text' : 'password'} autoComplete="current-password" required value={password} onChange={e => setPassword(e.target.value)}/><button type="button" className="icon-button" aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'} onClick={() => setShowPassword(!showPassword)}><Icon name="eye"/></button></div></label>{error && <p className="inline-error" role="alert">{error}</p>}<button className="primary-button login-submit" disabled={loading}>{loading ? 'Entrando...' : 'Entrar'}<Icon name="arrow"/></button><button type="button" className="text-button" onClick={() => setShowForgot(true)}>Esqueceu a senha?</button></form><p className="login-help">Ainda não tem acesso? Fale com o administrador do estoque.</p></div><span className="login-footer">Gestão de materiais e equipamentos</span></section>{showForgot && <ForgotPasswordModal onClose={() => setShowForgot(false)}/>}</main>;
 }
-
-export default Login;

@@ -1,293 +1,34 @@
-import { useEffect, useState, useMemo } from "react";
-import { getProducts } from "../services/products";
-import { getMovimentacoes } from "../services/movimentacoes";
-
-import {
-  PieChart,
-  Pie,
-  Cell,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
-
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
-import * as XLSX from "xlsx";
-
-import ExportCard from "../components/ExportCard";
-import "../styles/reports.css";
-
-const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#A569BD"];
-
-export default function Reports() {
-  const [products, setProducts] = useState([]);
-  const [movimentacoes, setMovimentacoes] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  const [openExport, setOpenExport] = useState(false);
-  const [exportType, setExportType] = useState(null);
-
-  const [moveType, setMoveType] = useState("all");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-
-  // 🔥 NOVOS FILTROS
-  const [stockProductType, setStockProductType] = useState("all");
-  const [movementProductType, setMovementProductType] = useState("all");
-
-  /* ================================
-     🔥 CARREGAR DADOS
-  ================================= */
-  useEffect(() => {
-    async function loadData() {
-      try {
-        const produtos = await getProducts();
-        const movs = await getMovimentacoes();
-
-        setProducts(produtos || []);
-        setMovimentacoes(movs || []);
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    loadData();
-  }, []);
-
-  /* ================================
-     📊 GRÁFICO 1 – ESTOQUE ATUAL
-  ================================= */
-  const byProduct = useMemo(() => {
-    const filtered = products.filter((p) => {
-      if (stockProductType !== "all" && p.tipo !== stockProductType)
-        return false;
-      return true;
-    });
-
-    return Object.values(
-      filtered.reduce((acc, p) => {
-        acc[p.nome] = acc[p.nome] || { name: p.nome, value: 0 };
-        acc[p.nome].value += Number(p.quantidade || 0);
-        return acc;
-      }, {})
-    );
-  }, [products, stockProductType]);
-
-  /* ================================
-     📊 GRÁFICO 2 – ENTRADA vs SAÍDA
-  ================================= */
-  const movementData = useMemo(() => {
-    return movimentacoes.filter((m) => {
-      if (moveType !== "all" && m.tipo !== moveType) return false;
-
-      if (
-        movementProductType !== "all" &&
-        m.produtos?.tipo !== movementProductType
-      )
-        return false;
-
-      if (startDate && m.created_at) {
-        if (new Date(m.created_at) < new Date(startDate)) return false;
-      }
-
-      if (endDate && m.created_at) {
-        if (new Date(m.created_at) > new Date(endDate)) return false;
-      }
-
-      return true;
-    });
-  }, [
-    movimentacoes,
-    moveType,
-    movementProductType,
-    startDate,
-    endDate,
-  ]);
-
-  const byType = Object.values(
-    movementData.reduce((acc, m) => {
-      acc[m.tipo] = acc[m.tipo] || { name: m.tipo, value: 0 };
-      acc[m.tipo].value += Number(m.quantidade || 0);
-      return acc;
-    }, {})
-  );
-
-  /* ================================
-     📤 EXPORTAÇÃO MOVIMENTAÇÕES
-  ================================= */
-  const handleExport = () => {
-    const data = movementData;
-
-    if (data.length === 0) {
-      alert("Nenhuma movimentação para exportar.");
-      return;
-    }
-
-    if (exportType === "excel") {
-      const ws = XLSX.utils.json_to_sheet(
-        data.map((m) => ({
-          Produto: m.produtos?.nome || "-",
-          "Tipo Produto": m.produtos?.tipo || "-",
-          Movimentação: m.tipo,
-          Quantidade: m.quantidade,
-          Data: m.created_at
-            ? new Date(m.created_at).toLocaleDateString()
-            : "-",
-          Observação: m.observacao || "-",
-        }))
-      );
-
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Movimentações");
-      XLSX.writeFile(wb, "relatorio-movimentacoes.xlsx");
-    }
-
-    if (exportType === "pdf") {
-      const doc = new jsPDF();
-      doc.text("Relatório de Movimentações", 14, 15);
-
-      autoTable(doc, {
-        startY: 22,
-        head: [
-          [
-            "Produto",
-            "Tipo Produto",
-            "Movimentação",
-            "Quantidade",
-            "Data",
-            "Observação",
-          ],
-        ],
-        body: data.map((m) => [
-          m.produtos?.nome || "-",
-          m.produtos?.tipo || "-",
-          m.tipo,
-          m.quantidade,
-          m.created_at
-            ? new Date(m.created_at).toLocaleDateString()
-            : "-",
-          m.observacao || "-",
-        ]),
-      });
-
-      doc.save("relatorio-movimentacoes.pdf");
-    }
-
-    setOpenExport(false);
-    setExportType(null);
-  };
-
-  if (loading) return <p>Carregando relatório...</p>;
-
-  return (
-    <div className="reports-container">
-      <h2>Relatórios</h2>
-
-      <div className="report-actions">
-        <button
-          onClick={() => {
-            setExportType("excel");
-            setOpenExport(true);
-          }}
-        >
-          Exportar Excel
-        </button>
-
-        <button
-          onClick={() => {
-            setExportType("pdf");
-            setOpenExport(true);
-          }}
-        >
-          Exportar PDF
-        </button>
-      </div>
-
-      {/* ===================== */}
-      {/* 📊 GRÁFICO 1 */}
-      {/* ===================== */}
-      <h4>Estoque Atual</h4>
-
-      <select
-        value={stockProductType}
-        onChange={(e) => setStockProductType(e.target.value)}
-      >
-        <option value="all">Todos os tipos</option>
-        <option value="toner">Toner</option>
-        <option value="tinta">Tinta</option>
-        <option value="cilindro">Cilindro</option>
-        <option value="fusao">Fusão</option>
-        <option value="pecas diversas">Peças diversas</option>
-      </select>
-
-      <div className="chart-box">
-        <ResponsiveContainer width="100%" height={300}>
-          <PieChart>
-            <Pie data={byProduct} dataKey="value" label>
-              {byProduct.map((_, i) => (
-                <Cell key={i} fill={COLORS[i % COLORS.length]} />
-              ))}
-            </Pie>
-            <Tooltip />
-          </PieChart>
-        </ResponsiveContainer>
-      </div>
-
-      {/* ===================== */}
-      {/* 📊 GRÁFICO 2 */}
-      {/* ===================== */}
-      <h4>Movimentações (Entrada vs Saída)</h4>
-
-      <select
-        value={movementProductType}
-        onChange={(e) => setMovementProductType(e.target.value)}
-      >
-        <option value="all">Todos os tipos</option>
-        <option value="toner">Toner</option>
-        <option value="tinta">Tinta</option>
-        <option value="cilindro">Cilindro</option>
-        <option value="fusao">Fusão</option>
-        <option value="pecas diversas">Peças diversas</option>
-      </select>
-
-      <select value={moveType} onChange={(e) => setMoveType(e.target.value)}>
-        <option value="all">Entrada + Saída</option>
-        <option value="entrada">Entrada</option>
-        <option value="saida">Saída</option>
-      </select>
-
-      <input
-        type="date"
-        value={startDate}
-        onChange={(e) => setStartDate(e.target.value)}
-      />
-
-      <input
-        type="date"
-        value={endDate}
-        onChange={(e) => setEndDate(e.target.value)}
-      />
-
-      <div className="chart-box">
-        <ResponsiveContainer width="100%" height={300}>
-          <PieChart>
-            <Pie data={byType} dataKey="value" label>
-              {byType.map((_, i) => (
-                <Cell key={i} fill={COLORS[i % COLORS.length]} />
-              ))}
-            </Pie>
-            <Tooltip />
-          </PieChart>
-        </ResponsiveContainer>
-      </div>
-
-      <ExportCard
-        open={openExport}
-        onClose={() => setOpenExport(false)}
-        onConfirm={handleExport}
-      />
-    </div>
-  );
+import {useEffect,useMemo,useState} from 'react';
+import {getProducts} from '../services/products';
+import {getMovimentacoes} from '../services/movimentacoes';
+import PageHeader from '../components/PageHeader';
+import Dialog from '../components/Dialog';
+import Icon from '../components/Icon';
+const types=[['all','Todos os tipos'],['toner','Toner'],['tinta','Tinta'],['cilindro','Cilindro'],['fusao','Fusão'],['pecas diversas','Peças diversas']];
+const number = value => Number(value || 0).toLocaleString('pt-BR');
+export default function Reports(){
+ const [products,setProducts]=useState([]);const [movements,setMovements]=useState([]);const [loading,setLoading]=useState(true);const [error,setError]=useState('');
+ const [productType,setProductType]=useState('all');const [moveType,setMoveType]=useState('all');const [start,setStart]=useState('');const [end,setEnd]=useState('');const [exportOpen,setExportOpen]=useState(false);const [exporting,setExporting]=useState(false);const [format,setFormat]=useState('excel');
+ useEffect(()=>{let active=true;Promise.all([getProducts(),getMovimentacoes()]).then(([p,m])=>{if(active){setProducts(p);setMovements(m);}}).catch(e=>{if(active)setError(e.message);}).finally(()=>{if(active)setLoading(false);});return()=>{active=false;};},[]);
+ const stock=useMemo(()=>products.filter(p=>productType==='all'||p.tipo===productType).sort((a,b)=>Number(b.quantidade)-Number(a.quantidade)),[products,productType]);
+ const filtered=useMemo(()=>movements.filter(m=>(productType==='all'||m.produtos?.tipo===productType)&&(moveType==='all'||m.tipo===moveType)&&(!start||new Date(m.created_at)>=new Date(`${start}T00:00:00`))&&(!end||new Date(m.created_at)<=new Date(`${end}T23:59:59.999`))),[movements,productType,moveType,start,end]);
+ const total=stock.reduce((n,p)=>n+Number(p.quantidade||0),0);const max=Math.max(1,...stock.map(p=>Number(p.quantidade||0)));
+ const entries=filtered.filter(m=>m.tipo==='entrada').reduce((n,m)=>n+Number(m.quantidade),0);const exits=filtered.filter(m=>m.tipo==='saida').reduce((n,m)=>n+Number(m.quantidade),0);
+ async function exportData(){
+  if(!filtered.length){setError('Não há movimentações no período selecionado para exportar.');setExportOpen(false);return;}
+  setExporting(true);setError('');
+  const rows=filtered.map(m=>({'Produto':m.produtos?.nome||'—','Tipo do produto':m.produtos?.tipo||'—','Movimentação':m.tipo==='entrada'?'Entrada':'Saída','Quantidade':m.quantidade,'Data':m.created_at?new Date(m.created_at).toLocaleDateString('pt-BR'):'—','Observação':m.observacao||'—'}));
+  try{
+   if(format==='excel'){const XLSX=await import('xlsx');const book=XLSX.utils.book_new();XLSX.utils.book_append_sheet(book,XLSX.utils.json_to_sheet(rows),'Movimentações');XLSX.writeFile(book,'blito-movimentacoes.xlsx');}
+   else{const [{default:jsPDF},{default:autoTable}]=await Promise.all([import('jspdf'),import('jspdf-autotable')]);const doc=new jsPDF();doc.text('Blito | Movimentações de estoque',14,16);autoTable(doc,{startY:24,head:[Object.keys(rows[0])],body:rows.map(row=>Object.values(row))});doc.save('blito-movimentacoes.pdf');}
+   setExportOpen(false);
+  }catch{setError('Não foi possível gerar o arquivo. Tente novamente.');}finally{setExporting(false);}
+ }
+ return <main className="page-sheet reports-container"><PageHeader title="Relatórios" description="Uma leitura do saldo atual e das movimentações de materiais."/><div className="report-toolbar"><div className="report-filters"><label>Tipo de produto<select value={productType} onChange={e=>setProductType(e.target.value)}>{types.map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label><label>Movimentação<select value={moveType} onChange={e=>setMoveType(e.target.value)}><option value="all">Entradas e saídas</option><option value="entrada">Entradas</option><option value="saida">Saídas</option></select></label><label>De<input type="date" value={start} max={end||undefined} onChange={e=>setStart(e.target.value)}/></label><label>Até<input type="date" value={end} min={start||undefined} onChange={e=>setEnd(e.target.value)}/></label></div><button onClick={()=>setExportOpen(true)} disabled={loading}><Icon name="download"/>Exportar</button></div>
+ {error&&<p className="inline-error" role="alert">{error}</p>}
+ <div className="report-grid"><section className="report-panel"><header className="panel-header"><div><h2>Saldo por produto</h2><p>{stock.length} produtos no filtro selecionado</p></div><span className="panel-total">{loading?'—':number(total)}<small>unidades</small></span></header>{loading?<p className="loading-state" role="status">Carregando saldos...</p>:stock.length?<div className="stock-bars">{stock.map(p=><div className="bar-row" key={p.id}><div><span>{p.nome}</span><strong>{number(p.quantidade)} <small>un.</small></strong></div><div className="bar-track"><span style={{width:`${Number(p.quantidade||0)/max*100}%`}}/></div></div>)}</div>:<div className="empty-state compact"><p>Nenhum produto para este tipo.</p></div>}</section>
+ <section className="report-panel"><header className="panel-header"><div><h2>Entradas e saídas</h2><p>{start||end?'No período selecionado':'Todo o histórico'}</p></div></header><div className="movement-totals"><div><span>Entradas</span><strong>{loading?'—':number(entries)}<small>unidades</small></strong></div><div><span>Saídas</span><strong>{loading?'—':number(exits)}<small>unidades</small></strong></div></div><div className="movement-balance"><span>Saldo das movimentações</span><strong>{entries-exits>0?'+':''}{number(entries-exits)} un.</strong></div>{!loading&&filtered.length===0&&<p className="panel-note">Nenhuma movimentação neste período. Registre uma entrada ou saída pelo estoque.</p>}</section></div>
+ <section className="history-section"><div className="section-heading"><h2>Histórico de movimentações</h2><span>{filtered.length} registros</span></div><div className="history-table-wrap"><table className="report-table"><thead><tr><th>Produto</th><th>Movimentação</th><th className="numeric">Quantidade</th><th>Observação</th><th className="numeric">Data</th></tr></thead><tbody>{filtered.length?filtered.map(m=><tr key={m.id}><td>{m.produtos?.nome||'—'}</td><td>{m.tipo==='entrada'?'Entrada':'Saída'}</td><td className="numeric">{m.tipo==='entrada'?'+':'−'}{number(m.quantidade)}</td><td>{m.observacao||'—'}</td><td className="numeric">{m.created_at?new Date(m.created_at).toLocaleDateString('pt-BR'):'—'}</td></tr>):<tr><td colSpan="5" className="table-empty">{loading?'Carregando histórico...':'Nenhuma movimentação encontrada para os filtros selecionados.'}</td></tr>}</tbody></table></div></section>
+ {exportOpen&&<Dialog title="Exportar movimentações" onClose={()=>setExportOpen(false)}><div className="form-stack"><p className="form-description">O arquivo usa os filtros selecionados neste relatório e inclui {filtered.length} registros.</p><label>Formato<select value={format} onChange={e=>setFormat(e.target.value)}><option value="excel">Planilha Excel (.xlsx)</option><option value="pdf">Documento PDF (.pdf)</option></select></label><footer className="dialog-actions"><button disabled={exporting} onClick={()=>setExportOpen(false)}>Cancelar</button><button className="primary-button" disabled={exporting||!filtered.length} onClick={exportData}>{exporting?'Gerando arquivo...':'Exportar arquivo'}</button></footer>{!filtered.length&&<p className="field-help">Não há registros para exportar. Altere os filtros ou registre uma movimentação.</p>}</div></Dialog>}
+ </main>;
 }

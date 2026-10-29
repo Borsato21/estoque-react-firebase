@@ -27,7 +27,7 @@ function ReportModal({ products, onClose }) {
       return 0;
     });
 
-  // 📊 EXCEL
+  //  EXCEL
   const exportExcel = () => {
     const data = filtered.map((p) => ({
       Nome: p.nome,
@@ -43,7 +43,7 @@ function ReportModal({ products, onClose }) {
     XLSX.writeFile(workbook, "relatorio-estoque.xlsx");
   };
 
-  // 📄 PDF
+  //  PDF
   const exportPDF = () => {
     const doc = new jsPDF();
 
@@ -106,8 +106,8 @@ function ReportModal({ products, onClose }) {
         </div>
 
         <div className="report-actions">
-          <button onClick={exportExcel}>📊 Excel</button>
-          <button onClick={exportPDF}>📕 PDF</button>
+          <button onClick={exportExcel}> Excel</button>
+          <button onClick={exportPDF}> PDF</button>
         </div>
 
         <table className="report-table">

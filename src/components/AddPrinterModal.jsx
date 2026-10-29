@@ -1,73 +1,16 @@
-import { useState } from "react";
-
-export default function AddPrinterModal({ onClose, onSave, editingPrinter }) {
-  const [model, setModel] = useState(editingPrinter?.model || "");
-  const [serialNumber, setSerialNumber] = useState(editingPrinter?.serialNumber || "");
-  const [counter, setCounter] = useState(editingPrinter?.counter ?? "");
-  const [observation, setObservation] = useState(editingPrinter?.observation || "");
-  const [loading, setLoading] = useState(false);
-
-  const handleSave = async () => {
-    if (!model || !serialNumber || counter === "" || !Number.isInteger(Number(counter)) || Number(counter) < 0) {
-      alert("Preencha todos os campos obrigatórios");
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-    await onSave({
-      model,
-      serialNumber,
-      counter: Number(counter),
-      observation,
-    });
-
-    onClose();
-    } catch (error) {
-      alert(error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div className="modal-overlay">
-      <div className="modal">
-
-        <button className="modal-close" onClick={onClose}>×</button>
-
-        <h3>{editingPrinter ? "Editar Impressora" : "Adicionar Impressora"}</h3>
-
-        <input
-          placeholder="Modelo da Impressora"
-          value={model}
-          onChange={(e) => setModel(e.target.value)}
-        />
-
-        <input
-          placeholder="Número de Série"
-          value={serialNumber}
-          onChange={(e) => setSerialNumber(e.target.value)}
-        />
-
-        <input
-          type="number"
-          placeholder="Contador"
-          value={counter}
-          onChange={(e) => setCounter(e.target.value)}
-        />
-
-        <textarea
-          placeholder="Observação"
-          value={observation}
-          onChange={(e) => setObservation(e.target.value)}
-        />
-
-        <button onClick={handleSave} disabled={loading}>
-          {loading ? "Salvando..." : "Salvar"}
-        </button>
-      </div>
-    </div>
-  );
+import { useState } from 'react';
+import Dialog from './Dialog';
+export default function AddPrinterModal({onClose,onSave,editingPrinter}) {
+  const [form,setForm] = useState({model:editingPrinter?.model || '',serialNumber:editingPrinter?.serialNumber || '',counter:editingPrinter?.counter ?? '',observation:editingPrinter?.observation || ''});
+  const [loading,setLoading] = useState(false); const [error,setError] = useState('');
+  const field = name => ({value:form[name],onChange:e => setForm({...form,[name]:e.target.value})});
+  async function save(event) { event.preventDefault(); setLoading(true); setError(''); try { await onSave({...form,counter:Number(form.counter)}); } catch(error) {setError(error.message);} finally {setLoading(false);} }
+  return <Dialog title={editingPrinter ? 'Editar impressora' : 'Adicionar impressora'} onClose={onClose}><form className="form-stack" onSubmit={save}>
+    <label>Modelo<input required placeholder="Ex.: Brother DCP-L5652DN" {...field('model')}/></label>
+    <label>Número de série<input required {...field('serialNumber')}/></label>
+    <label>Contador de impressões<input required type="number" min="0" step="1" {...field('counter')}/></label>
+    <label>Observação <span className="optional">Opcional</span><textarea rows="3" {...field('observation')}/></label>
+    {error && <p className="inline-error" role="alert">{error}</p>}
+    <footer className="dialog-actions"><button type="button" disabled={loading} onClick={onClose}>Cancelar</button><button className="primary-button" disabled={loading}>{loading ? 'Salvando...' : 'Salvar impressora'}</button></footer>
+  </form></Dialog>;
 }

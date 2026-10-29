@@ -12,9 +12,15 @@ Sistema web para controlar produtos, impressoras e movimentações de estoque. D
 - Imagens em bucket privado, acessíveis por URLs temporárias.
 - Estoque compartilhado somente entre membros autorizados no banco.
 
+## Interface
+
+A interface usa navegação recolhível no celular, listas com fotos e saldos alinhados, busca por produto e formulários com validação. Os relatórios mostram barras proporcionais ao saldo real, totais de entradas e saídas e histórico filtrável. PDF e Excel são carregados sob demanda.
+
+A direção visual usa o estilo Framed sheet, a tipografia IBM Plex Sans e o logotipo original da Blito.
+
 ## Tecnologias
 
-React 19, Vite, React Router, Supabase JS, Recharts, jsPDF e SheetJS.
+React 19, Vite, React Router, Supabase JS, jsPDF e SheetJS.
 
 ## Executar localmente
 

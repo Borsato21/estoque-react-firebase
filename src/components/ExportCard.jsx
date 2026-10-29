@@ -1,4 +1,3 @@
-import "../styles/exportCard.css";
 
 export default function ExportCard({
   open,
@@ -12,7 +11,7 @@ export default function ExportCard({
   onlyWithStock,
   setOnlyWithStock,
 
-  // 🔹 MOVIMENTAÇÃO
+  //  MOVIMENTAÇÃO
   moveType,
   setMoveType,
   startDate,
@@ -27,7 +26,7 @@ export default function ExportCard({
       <div className="export-card">
         <h3>Configurar Exportação</h3>
 
-        {/* 📦 FILTROS DE PRODUTO */}
+        {/*  FILTROS DE PRODUTO */}
         <label>Ordenar por:</label>
         <select value={orderBy} onChange={(e) => setOrderBy(e.target.value)}>
           <option value="name-asc">Nome (A–Z)</option>
@@ -56,7 +55,7 @@ export default function ExportCard({
           Somente produtos com estoque
         </label>
 
-        {/* 🔄 MOVIMENTAÇÃO */}
+        {/*  MOVIMENTAÇÃO */}
         <hr />
 
         <label>Tipo de movimentação:</label>

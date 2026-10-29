@@ -13,8 +13,8 @@ export default function StockAccess({ userId }) {
       .catch(() => { if (active) setStatus('error'); });
     return () => { active = false; };
   }, [userId]);
-  if (status === 'loading') return <p role="status">Verificando acesso ao estoque...</p>;
-  if (status !== 'allowed') return <main>
+  if (status === 'loading') return <p className="full-page-state" role="status">Verificando acesso ao estoque...</p>;
+  if (status !== 'allowed') return <main className="full-page-state">
     <p role="alert">{status === 'denied' ? 'Sua conta ainda não tem acesso ao estoque. Solicite autorização ao administrador.' : 'Não foi possível verificar seu acesso. Recarregue a página para tentar novamente.'}</p>
     <button onClick={() => logout().catch(error => alert(error.message))}>Sair</button>
   </main>;

@@ -29,8 +29,8 @@ export default function App() {
     });
     return () => { active = false; subscription.unsubscribe(); };
   }, []);
-  if (loading) return <p role="status">Carregando sessão...</p>;
-  if (error) return <p role="alert">{error} <button onClick={() => window.location.reload()}>Recarregar</button></p>;
+  if (loading) return <p className="full-page-state" role="status">Carregando sessão...</p>;
+  if (error) return <p className="full-page-state" role="alert">{error} <button onClick={() => window.location.reload()}>Recarregar</button></p>;
   return <>
     <Routes>
       <Route path="/login" element={session ? <Navigate to="/estoque" replace /> : <Login />} />
