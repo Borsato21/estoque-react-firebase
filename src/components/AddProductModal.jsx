@@ -1,21 +1,24 @@
 import { useState } from "react";
+import { uploadImage } from "../services/storage";
 
 function AddProductModal({ onClose, onSave, editingProduct }) {
   const [nome, setNome] = useState(editingProduct?.nome || "");
   const [codigo, setCodigo] = useState(editingProduct?.codigo || "");
   const [tipo, setTipo] = useState(editingProduct?.tipo || "");
-  const [observacao, setObservacao] = useState("");
+  const [observacao, setObservacao] = useState(editingProduct?.observacao || "");
   const [quantidade, setQuantidade] = useState(
-    editingProduct?.quantidade || ""
+    editingProduct?.quantidade ?? ""
   );
   const [imagem_url, setImagemUrl] = useState(
     editingProduct?.imagem_url || ""
   );
+  const [imageFile, setImageFile] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
+    setImageFile(file);
 
     const reader = new FileReader();
     reader.onload = () => setImagemUrl(reader.result);
@@ -23,26 +26,32 @@ function AddProductModal({ onClose, onSave, editingProduct }) {
   };
 
   const handleSave = async () => {
-    if (!nome || !tipo || !quantidade || !imagem_url) {
+    if (!nome.trim() || !tipo || quantidade === "" || !Number.isInteger(Number(quantidade)) || Number(quantidade) < 0 || !imagem_url) {
       alert("Preencha todos os campos obrigatórios");
       return;
     }
 
     setLoading(true);
 
+    try {
+    const imagePath = imageFile ? await uploadImage(imageFile) : (editingProduct?.image_path || imagem_url);
     const productData = {
       nome,
       codigo,
       tipo,
       quantidade: Number(quantidade),
-      imagem_url,
+      imagem_url: imagePath,
       observacao,
     };
 
     await onSave(productData);
 
-    setLoading(false);
     onClose();
+    } catch (error) {
+      alert(error.message || "Não foi possível salvar o produto.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -62,7 +71,7 @@ function AddProductModal({ onClose, onSave, editingProduct }) {
           )}
           <input
   type="file"
-  accept="image/*"
+  accept="image/jpeg,image/png,image/webp"
   capture="environment"
   hidden
   onChange={handleImageChange}

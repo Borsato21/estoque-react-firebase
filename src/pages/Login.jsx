@@ -1,7 +1,6 @@
 import { useState } from "react";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { login } from "../services/auth";
 import { useNavigate } from "react-router-dom";
-import { auth } from "../services/firebase";
 import ForgotPasswordModal from "../components/ForgotPasswordModal";
 
 import "../styles/login.css";
@@ -20,7 +19,7 @@ function Login() {
     setError("");
 
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      await login(email, password);
       navigate("/estoque");
     } catch {
       setError("Email ou senha inválidos");

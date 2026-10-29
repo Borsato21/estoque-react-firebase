@@ -12,7 +12,7 @@ export default function MovimentacaoModal({ open, onClose, product, onSuccess })
   async function handleSubmit(e) {
     e.preventDefault();
 
-    if (!quantidade || Number(quantidade) <= 0) {
+    if (!Number.isInteger(Number(quantidade)) || Number(quantidade) <= 0) {
       alert("Digite uma quantidade válida");
       return;
     }
@@ -35,7 +35,7 @@ export default function MovimentacaoModal({ open, onClose, product, onSuccess })
       onClose();
     } catch (error) {
       console.error("Erro ao registrar movimentação:", error);
-      alert("Erro ao registrar movimentação");
+      alert(error.message || "Erro ao registrar movimentação");
     } finally {
       setLoading(false);
     }

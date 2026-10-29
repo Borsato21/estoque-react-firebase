@@ -11,8 +11,6 @@ import ProductCard from "../components/ProductCard";
 import MovimentacaoModal from "../components/MovimentacaoModal";
 
 import "../styles/stock.css";
-import { logout } from "../services/firebase";
-import { useNavigate } from "react-router-dom";
 
 function Stock() {
   const [products, setProducts] = useState([]);
@@ -26,18 +24,10 @@ function Stock() {
   const [openMoveModal, setOpenMoveModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
 
-  const navigate = useNavigate();
-
-  const handleLogout = useCallback(async () => {
-    await logout();
-    navigate("/");
-  }, [navigate]);
-
   async function loadProducts() {
     try {
       setLoading(true);
       const data = await getProducts();
-      console.log("PRODUTOS DO BANCO:", data);
       setProducts(data);
     } catch (error) {
       console.error("Erro ao carregar produtos:", error);
@@ -47,12 +37,13 @@ function Stock() {
   }
 
   useEffect(() => {
-    loadProducts();
+    let active = true;
+    getProducts().then(data => { if (active) setProducts(data); }).catch(error => { if (active) alert(error.message); }).finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
   }, []);
 
   const handleSaveProduct = useCallback(
     async (product) => {
-      try {
         if (editingProduct) {
           await updateProduct(editingProduct.id, product);
         } else {
@@ -62,9 +53,7 @@ function Stock() {
         await loadProducts();
         setEditingProduct(null);
         setShowModal(false);
-      } catch (error) {
-        console.error("Erro ao salvar produto:", error);
-      }
+
     },
     [editingProduct]
   );

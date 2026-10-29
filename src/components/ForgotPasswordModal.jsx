@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { resetPassword } from "../services/firebase";
+import { resetPassword } from "../services/auth";
 
 function ForgotPasswordModal({ onClose }) {
   const [email, setEmail] = useState("");
@@ -20,13 +20,7 @@ function ForgotPasswordModal({ onClose }) {
     } catch (error) {
       console.error(error);
 
-      if (error.code === "auth/user-not-found") {
-        alert("Email não encontrado. Fale com o administrador.");
-      } else if (error.code === "auth/invalid-email") {
-        alert("Email inválido.");
-      } else {
-        alert("Erro ao enviar email.");
-      }
+      alert("Não foi possível enviar o email. Verifique o endereço e tente novamente.");
     } finally {
       setLoading(false);
     }

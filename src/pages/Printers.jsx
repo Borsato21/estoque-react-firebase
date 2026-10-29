@@ -24,11 +24,12 @@ export default function Printers() {
   }
 
   useEffect(() => {
-    loadPrinters();
+    let active = true;
+    getPrinters().then(data => { if (active) setPrinters(data); }).catch(error => { if (active) alert(error.message); });
+    return () => { active = false; };
   }, []);
 
   const handleSave = async (printer) => {
-    try {
       if (editingPrinter) {
         await updatePrinter(editingPrinter.id, printer);
       } else {
@@ -40,9 +41,7 @@ export default function Printers() {
 
       // Recarrega lista após salvar
       loadPrinters();
-    } catch (error) {
-      console.error("Erro ao salvar impressora:", error);
-    }
+
   };
 
   const handleDelete = async (id) => {

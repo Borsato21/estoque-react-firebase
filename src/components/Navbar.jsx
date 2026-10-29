@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import { logout } from "../services/firebase";
+import { logout } from "../services/auth";
 import "../styles/navbar.css";
 
 export default function Navbar() {
@@ -14,7 +14,7 @@ export default function Navbar() {
 
       </div>
 
-      <button onClick={logout}>🚪</button>
+      <button aria-label="Sair" onClick={() => logout().catch(error => alert(error.message))}>🚪</button>
     </nav>
   );
 }

@@ -3,18 +3,19 @@ import { useState } from "react";
 export default function AddPrinterModal({ onClose, onSave, editingPrinter }) {
   const [model, setModel] = useState(editingPrinter?.model || "");
   const [serialNumber, setSerialNumber] = useState(editingPrinter?.serialNumber || "");
-  const [counter, setCounter] = useState(editingPrinter?.counter || "");
+  const [counter, setCounter] = useState(editingPrinter?.counter ?? "");
   const [observation, setObservation] = useState(editingPrinter?.observation || "");
   const [loading, setLoading] = useState(false);
 
   const handleSave = async () => {
-    if (!model || !serialNumber || !counter) {
+    if (!model || !serialNumber || counter === "" || !Number.isInteger(Number(counter)) || Number(counter) < 0) {
       alert("Preencha todos os campos obrigatórios");
       return;
     }
 
     setLoading(true);
 
+    try {
     await onSave({
       model,
       serialNumber,
@@ -22,8 +23,12 @@ export default function AddPrinterModal({ onClose, onSave, editingPrinter }) {
       observation,
     });
 
-    setLoading(false);
     onClose();
+    } catch (error) {
+      alert(error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

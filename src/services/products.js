@@ -1,3 +1,4 @@
+import { resolveImage } from "./storage";
 import { supabase } from "./supabaseClient";
 
 // 🔹 Buscar produtos
@@ -9,7 +10,9 @@ export async function getProducts() {
 
   if (error) throw error;
 
-  return data;
+  return Promise.all(data.map(async product => ({
+    ...product, image_path: product.imagem_url, imagem_url: await resolveImage(product.imagem_url),
+  })));
 }
 
 // 🔹 Adicionar produto
