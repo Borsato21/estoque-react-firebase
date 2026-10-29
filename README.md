@@ -1,5 +1,7 @@
 # Estoque Blito
 
+**Site:** [Acessar o Estoque Blito](https://estoque-react-firebase.vercel.app)
+
 Sistema web para controlar produtos, impressoras e movimentações de estoque. Desenvolvido em React com Supabase para autenticação, banco PostgreSQL e armazenamento de imagens.
 
 ## Funcionalidades
